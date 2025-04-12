@@ -1,6 +1,6 @@
 const express = require('express');
-const cors = require('cors');
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -19,15 +19,19 @@ app.post('/submit', async (req, res) => {
   try {
     const form = new FormData(req.body);
     await form.save();
-    res.status(201).json({ message: 'Form saved' });
+    res.status(201).json({ message: 'Form data saved.' });
   } catch (error) {
-    res.status(500).json({ error: 'Could not save form data' });
+    res.status(500).json({ error: 'Error saving data.' });
   }
 });
 
 app.get('/entries', async (req, res) => {
-  const entries = await FormData.find().sort({ timestamp: -1 });
-  res.json(entries);
+  try {
+    const entries = await FormData.find().sort({ timestamp: -1 });
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch entries.' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
