@@ -15,6 +15,15 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const FormData = require('./formData.model');
 
+app.delete('/entries/:id', async (req, res) => {
+  try {
+    await FormData.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete' });
+  }
+});
+
 app.post('/submit', async (req, res) => {
   try {
     const form = new FormData(req.body);
@@ -36,3 +45,4 @@ app.get('/entries', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+comment
