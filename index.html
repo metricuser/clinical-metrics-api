@@ -1,4 +1,3 @@
-<!-- Force update for Render deployment -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,17 +7,70 @@
     body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
     h1 { font-size: 24px; }
     form, table { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
-    label { display: block; margin-bottom: 10px; }
-    input, select, button { padding: 6px; margin-top: 4px; width: 100%; max-width: 300px; }
+    input, select, button { padding: 6px; margin: 6px 0; width: 100%; max-width: 300px; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px 12px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }
-    th { background: #eee; }
-    .actions button { margin-right: 5px; }
+    th, td { padding: 8px; border-bottom: 1px solid #ddd; }
     .confirm-box { margin-top: 6px; font-size: 12px; color: #444; }
-    .confirm-box button { margin-right: 6px; padding: 4px 8px; font-size: 12px; }
   </style>
 </head>
 <body>
-<!-- Content trimmed for brevity (same as full HTML above) -->
+<h1>Clinical Metrics Entry</h1>
+<form id="entryForm">
+  <select name="facilityName" required>
+    <option value="">Select Facility</option>
+    <option>Allis</option><option>Best Care</option><option>Bradford</option>
+  </select>
+  <input name="segment" placeholder="Segment" readonly />
+  <input name="month" placeholder="Month" required />
+  <input name="year" placeholder="Year" required />
+  <input name="apwResidents" placeholder="APW Residents" type="number" />
+  <input name="census" placeholder="Census" type="number" />
+  <button type="submit">Submit</button>
+</form>
+
+<h2>Submitted Entries</h2>
+<table id="dataTable"><thead><tr>
+  <th>Facility</th><th>Month</th><th>Year</th><th>APW%</th><th>Actions</th>
+</tr></thead><tbody></tbody></table>
+
+<script>
+const api = "https://clinical-metrics-api.onrender.com";
+const form = document.getElementById("entryForm");
+const tableBody = document.querySelector("#dataTable tbody");
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.apwResidents = Number(data.apwResidents);
+  data.census = Number(data.census);
+  const res = await fetch(api + "/submit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  if (res.ok) { form.reset(); loadData(); }
+};
+
+async function loadData() {
+  const res = await fetch(api + "/entries");
+  const entries = await res.json();
+  tableBody.innerHTML = "";
+  entries.forEach(entry => {
+    const apw = entry.apwResidents || 0;
+    const census = entry.census || 1;
+    const apwPct = ((apw / census) * 100).toFixed(1);
+    const row = `<tr>
+      <td>${entry.facilityName}</td><td>${entry.month}</td><td>${entry.year}</td>
+      <td>${apwPct}%</td><td><button onclick="deleteEntry('${entry._id}')">Delete</button></td>
+    </tr>`;
+    tableBody.innerHTML += row;
+  });
+}
+
+async function deleteEntry(id) {
+  await fetch(api + "/entries/" + id, { method: "DELETE" });
+  loadData();
+}
+loadData();
+</script>
 </body>
 </html>
