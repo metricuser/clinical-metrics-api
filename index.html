@@ -70,7 +70,7 @@
   </select>
 </div>
 <table id="dataTable"><thead><tr>
-  <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th>Census</th>
+  <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th>Census</th><th>Census</th>
   <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th>
   <th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th>
   <th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th>
@@ -138,10 +138,10 @@ async function loadData() {
       const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
       const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
       const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-      const color = (val, threshold) => parseFloat(val) >= threshold ? 'red font-weight:bold' : '';
+      const color = (val, threshold) => parseFloat(val) >= threshold ? 'style="color:red;font-weight:bold;"' : '';
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td>
+        <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td><td style='text-align:center;'>${entry.census}</td>
         <td>${entry.census}</td>
         <td style="${color(apwPct, 3)}">${apwPct}%</td>
         <td style="${color(swlPct, 5)}">${swlPct}%</td>
