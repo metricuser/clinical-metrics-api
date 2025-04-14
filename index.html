@@ -72,12 +72,21 @@
 </div>
 <table id="dataTable"><thead><tr>
 <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th style="text-align:center;">Census</th>
-<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th>
+<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th><th style="display:none;">APW Risk</th><th style="display:none;">SWL Risk</th><th style="display:none;">Falls Risk</th>
 <th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th>
 <th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
 <th>Actions</th>
 </tr></thead><tbody></tbody></table>
 <script>
+function getRiskLabel(pct, thresholds) {
+  const val = parseFloat(pct);
+  if (val >= thresholds.high) return "High";
+  if (val >= thresholds.moderate) return "Moderate";
+  return "Low";
+}
+            
+
+
 const api = "https://clinical-metrics-api.onrender.com";
 const form = document.getElementById("entryForm");
 const tableBody = document.querySelector("#dataTable tbody");
@@ -162,7 +171,27 @@ async function loadData() {
           <button onclick="editEntry('${entry._id}')">Edit</button>
           <button onclick="deleteEntry('${entry._id}')">Delete</button>
         </td>`;
-      tableBody.appendChild(row);
+      
+  const apwRisk = getRiskLabel(apwPct, { high: 5, moderate: 2 });
+  const swlRisk = getRiskLabel(swlPct, { high: 8, moderate: 4 });
+  const fallsRisk = getRiskLabel(fallPct, { high: 20, moderate: 10 });
+
+  const apwRiskTd = document.createElement("td");
+  apwRiskTd.textContent = apwRisk;
+  apwRiskTd.style.display = "none";
+  row.appendChild(apwRiskTd);
+
+  const swlRiskTd = document.createElement("td");
+  swlRiskTd.textContent = swlRisk;
+  swlRiskTd.style.display = "none";
+  row.appendChild(swlRiskTd);
+
+  const fallsRiskTd = document.createElement("td");
+  fallsRiskTd.textContent = fallsRisk;
+  fallsRiskTd.style.display = "none";
+  row.appendChild(fallsRiskTd);
+            
+tableBody.appendChild(row);
     });
 }
 
