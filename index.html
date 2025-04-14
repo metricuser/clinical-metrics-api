@@ -106,7 +106,7 @@ form.facilityName.onchange = e => {
 };
 
 
-form.onsubmit = async function(e) {
+form.onsubmit = async e => {
   e.preventDefault();
   const formData = new FormData(form);
   const payload = {};
@@ -668,5 +668,102 @@ loadData();
 console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
 
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form");
+  const api = "https://clinical-metrics-api.onrender.com";
+
+  const facilitySegments = {
+    "Allis": "Midwest", "Best Care": "Southern Hospitality", "Bradford": "Northern Pride",
+    "Buchanan": "Southern Hospitality", "Century Villa": "Northern Pride",
+    "Charlestown Place": "Southern Hospitality", "Dover": "Southern Hospitality",
+    "Morning Breeze": "Northern Pride", "Park View": "Northern Pride",
+    "Siena Woods": "Northern Pride", "Smyrna": "Southern Hospitality"
+  };
+
+  document.querySelector('[name="facilityName"]').addEventListener("change", e => {
+    document.querySelector('[name="segment"]').value = facilitySegments[e.target.value] || "";
+  });
+
+  form.onsubmit = async function(e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const payload = {};
+    formData.forEach((value, key) => {
+      payload[key] = (!isNaN(value) && value.trim() !== "") ? Number(value) : value;
+    });
+    payload.timestamp = new Date().toISOString();
+
+    try {
+      const response = await fetch(api + "/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        form.reset();
+        document.querySelector('[name="segment"]').value = "";
+        loadData();
+      } else {
+        alert("❌ Error submitting form.");
+      }
+    } catch (err) {
+      console.error("Submission failed:", err);
+      alert("❌ Network error.");
+    }
+  };
+
+  window.loadData = async function() {
+    try {
+      const res = await fetch(api + "/entries");
+      const entries = await res.json();
+      const tbody = document.querySelector("tbody");
+      tbody.innerHTML = "";
+
+      const sorted = [...entries].sort((a, b) =>
+        a.facilityName.localeCompare(b.facilityName)
+      );
+
+      sorted.forEach(entry => {
+        const census = Number(entry.census) || 0;
+        const apw = Number(entry.apwResidents) || 0;
+        const swl = Number(entry.swlResidents) || 0;
+        const falls = Number(entry.fallsResidents) || 0;
+        const apwPct = census ? (apw / census * 100).toFixed(1) : "0.0";
+        const swlPct = census ? (swl / census * 100).toFixed(1) : "0.0";
+        const fallsPct = census ? (falls / census * 100).toFixed(1) : "0.0";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${entry.facilityName}</td>
+          <td>${entry.month}</td>
+          <td>${entry.year}</td>
+          <td class="${apwPct >= 3 ? 'text-red-600 font-bold' : ''}">${apwPct}%</td>
+          <td class="${swlPct >= 5 ? 'text-red-600 font-bold' : ''}">${swlPct}%</td>
+          <td class="${fallsPct >= 13 ? 'text-red-600 font-bold' : ''}">${fallsPct}%</td>
+          <td><button onclick="deleteEntry('${entry._id}')">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      console.error("Error loading data", e);
+    }
+  };
+
+  window.deleteEntry = async function(id) {
+    try {
+      const res = await fetch(api + "/entries/" + id, { method: "DELETE" });
+      if (res.ok) loadData();
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
+
+  loadData();
+});
+</script>
 </body>
+
 </html>
