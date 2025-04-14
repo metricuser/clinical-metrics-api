@@ -52,7 +52,7 @@
 <h2>Submitted Entries</h2>
 <table id="dataTable"><thead><tr>
   <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th>
-  <th>APW%</th><th>SWL%</th><th>Falls%</th>
+  <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th><th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th><th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th>
   <th>Actions</th>
 </tr></thead><tbody></tbody></table>
 
@@ -94,9 +94,12 @@ async function loadData() {
     const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
     const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
     const row = document.createElement("tr");
+    
+    const color = (val, threshold) => parseFloat(val) >= threshold ? 'style="color:red;font-weight:bold;"' : '';
     row.innerHTML = `
+  
       <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td>
-      <td>${apwPct}%</td><td>${swlPct}%</td><td>${fallPct}%</td>
+      <td ${color(apwPct, 3)}>${apwPct}%</td><td ${color(swlPct, 5)}>${swlPct}%</td><td ${color(fallPct, 13)}>${fallPct}%</td>
       <td class="actions">
         <button onclick="editEntry('${entry._id}')">Edit</button>
         <button onclick="deleteEntry('${entry._id}')">Delete</button>
