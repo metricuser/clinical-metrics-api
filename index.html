@@ -50,6 +50,23 @@
 </form>
 
 <h2>Submitted Entries</h2>
+<div style="margin-bottom:10px;">
+  <input id="searchInput" placeholder="Search..." style="max-width:200px; margin-right:10px;" />
+  <button onclick="exportToCSV()" style="padding:6px 10px;">Export CSV</button><br><br>
+  <select id="filterFacility">
+    <option value="">All Facilities</option>
+    <option>Allis</option><option>Best Care</option><option>Bradford</option>
+    <option>Buchanan</option><option>Century Villa</option><option>Charlestown Place</option>
+    <option>Dover</option><option>Morning Breeze</option><option>Park View</option>
+    <option>Siena Woods</option><option>Smyrna</option>
+  </select>
+  <select id="filterMonth">
+    <option value="">All Months</option>
+    <option>January</option><option>February</option><option>March</option><option>April</option>
+    <option>May</option><option>June</option><option>July</option><option>August</option>
+    <option>September</option><option>October</option><option>November</option><option>December</option>
+  </select>
+</div>
 <table id="dataTable"><thead><tr>
   <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th>
   <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th><th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th><th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th>
@@ -85,11 +102,58 @@ form.onsubmit = async e => {
   if (res.ok) { form.reset(); tableBody.innerHTML = ""; loadData(); }
 };
 
+
+let facilityFilter = "";
+let monthFilter = "";
+
+document.getElementById("filterFacility").onchange = e => {
+  facilityFilter = e.target.value;
+  loadData();
+};
+document.getElementById("filterMonth").onchange = e => {
+  monthFilter = e.target.value;
+  loadData();
+};
+
+
+let searchText = "";
+
+document.getElementById("searchInput").oninput = e => {
+  searchText = e.target.value.toLowerCase();
+  loadData();
+};
+
+function exportToCSV() {
+  fetch(api + "/entries")
+    .then(res => res.json())
+    .then(data => {
+      const headers = Object.keys(data[0] || {});
+      const csvRows = [
+        headers.join(","),
+        ...data.map(row => headers.map(field => `"${row[field] || ""}"`).join(","))
+      ];
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "clinical_metrics.csv";
+      link.click();
+    });
+}
+
 async function loadData() {
+
+
   const res = await fetch(api + "/entries");
   const entries = await res.json();
   tableBody.innerHTML = "";
-  entries.forEach(entry => {
+  
+  entries
+    .filter(e => !facilityFilter || e.facilityName === facilityFilter)
+    .filter(e => !monthFilter || e.month === monthFilter).filter(e => !searchText || JSON.stringify(e).toLowerCase().includes(searchText))
+    .sort((a, b) => a.facilityName.localeCompare(b.facilityName))
+    .forEach(entry => {
+
     const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
     const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
     const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
