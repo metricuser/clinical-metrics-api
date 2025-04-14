@@ -71,20 +71,18 @@
 </select>
 </div>
 <table id="dataTable"><thead><tr>
-<th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th style="text-align:center;">Census</th>
-<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th><th style="display:none;">APW Risk</th><th style="display:none;">SWL Risk</th><th style="display:none;">Falls Risk</th>
-<th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th>
+<th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th style="text-align:center;">Census</th><th>APW Risk</th>
+<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th><th>SWL Risk</th>
+<th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th><th>Falls Risk</th>
 <th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
 <th>Actions</th>
 </tr></thead><tbody></tbody></table>
-<script>
-function getRiskLabel(pct, thresholds) {
+<script>function getRiskLabel(pct, thresholds) {
   const val = parseFloat(pct);
   if (val >= thresholds.high) return "High";
   if (val >= thresholds.moderate) return "Moderate";
   return "Low";
 }
-            
 
 
 const api = "https://clinical-metrics-api.onrender.com";
@@ -171,27 +169,22 @@ async function loadData() {
           <button onclick="editEntry('${entry._id}')">Edit</button>
           <button onclick="deleteEntry('${entry._id}')">Delete</button>
         </td>`;
-      
-  const apwRisk = getRiskLabel(apwPct, { high: 5, moderate: 2 });
-  const swlRisk = getRiskLabel(swlPct, { high: 8, moderate: 4 });
-  const fallsRisk = getRiskLabel(fallPct, { high: 20, moderate: 10 });
+      const apwRisk = getRiskLabel(apwPct, { high: 6, moderate: 3 });
+  const swlRisk = getRiskLabel(swlPct, { high: 10, moderate: 5 });
+  const fallsRisk = getRiskLabel(fallPct, { high: 15, moderate: 8 });
 
   const apwRiskTd = document.createElement("td");
   apwRiskTd.textContent = apwRisk;
-  apwRiskTd.style.display = "none";
-  row.appendChild(apwRiskTd);
+  row.insertBefore(apwRiskTd, row.children[7]);
 
   const swlRiskTd = document.createElement("td");
   swlRiskTd.textContent = swlRisk;
-  swlRiskTd.style.display = "none";
-  row.appendChild(swlRiskTd);
+  row.insertBefore(swlRiskTd, row.children[9]);
 
   const fallsRiskTd = document.createElement("td");
   fallsRiskTd.textContent = fallsRisk;
-  fallsRiskTd.style.display = "none";
-  row.appendChild(fallsRiskTd);
-            
-tableBody.appendChild(row);
+  row.insertBefore(fallsRiskTd, row.children[11]);
+  tableBody.appendChild(row);
     });
 }
 
