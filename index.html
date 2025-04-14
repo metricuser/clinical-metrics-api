@@ -120,9 +120,9 @@ form.onsubmit = async e => {
   });
 
   
-    const responseJson = await res.json().catch(() => ({}));
+    const responsePayload = await res.json().catch(() => ({}));
     console.log("✅ Submitted:", formPayload);
-    console.log("✅ Response:", responseJson);
+    console.log("✅ Response:", responsePayload);
     if (res.ok) {
 
     form.reset();
@@ -143,9 +143,9 @@ console.log("✅ Dashboard ready: data loaded, scores calculated, form active.")
     body: JSON.stringify(data)
   });
   
-    const responseJson = await res.json().catch(() => ({}));
+    const responsePayload = await res.json().catch(() => ({}));
     console.log("✅ Submitted:", formPayload);
-    console.log("✅ Response:", responseJson);
+    console.log("✅ Response:", responsePayload);
     if (res.ok) {
  form.reset(); tableBody.innerHTML = ""; 
 function riskLevel(entry) {
