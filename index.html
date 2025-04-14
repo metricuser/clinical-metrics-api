@@ -107,6 +107,25 @@ form.facilityName.onchange = e => {
 
 form.onsubmit = async e => {
   e.preventDefault();
+  const formData = new FormData(form);
+  const data = {};
+  formData.forEach((value, key) => {
+    data[key] = isNaN(value) || value === "" ? value : Number(value);
+  });
+
+  const res = await fetch(api + "/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (res.ok) {
+    form.reset();
+    document.querySelector('[name="segment"]').value = "";
+    loadData();
+  } else {
+    alert("Error submitting data.");
+  }
 
   e.preventDefault();
   const data = Object.fromEntries(new FormData(form).entries());
