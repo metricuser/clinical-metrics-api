@@ -108,7 +108,7 @@ form.facilityName.onchange = e => {
 form.onsubmit = async e => {
   e.preventDefault();
   const formData = new FormData(form);
-  const data = {};
+  const formPayload = {};
   formData.forEach((value, key) => {
     data[key] = (!isNaN(value) && value.trim() !== "") ? Number(value) : value;
   });
@@ -121,7 +121,7 @@ form.onsubmit = async e => {
 
   
     const responseJson = await res.json().catch(() => ({}));
-    console.log("✅ Submitted:", data);
+    console.log("✅ Submitted:", formPayload);
     console.log("✅ Response:", responseJson);
     if (res.ok) {
 
@@ -144,7 +144,7 @@ console.log("✅ Dashboard ready: data loaded, scores calculated, form active.")
   });
   
     const responseJson = await res.json().catch(() => ({}));
-    console.log("✅ Submitted:", data);
+    console.log("✅ Submitted:", formPayload);
     console.log("✅ Response:", responseJson);
     if (res.ok) {
  form.reset(); tableBody.innerHTML = ""; 
