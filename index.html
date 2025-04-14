@@ -72,7 +72,7 @@
 </div>
 <table id="dataTable"><thead><tr>
 <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th style="text-align:center;">Census</th>
-<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th><th style="display:none;">APW Risk</th><th style="display:none;">SWL Risk</th><th style="display:none;">Falls Risk</th>
+<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th><th>APW Risk</th><th>SWL Risk</th><th>Falls Risk</th>
 <th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th>
 <th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
 <th>Actions</th>
@@ -178,17 +178,17 @@ async function loadData() {
 
   const apwRiskTd = document.createElement("td");
   apwRiskTd.textContent = apwRisk;
-  apwRiskTd.style.display = "none";
+  apwRiskTd.style.color = apwRisk === "High" ? "red" : apwRisk === "Moderate" ? "orange" : "green"; apwRiskTd.style.fontWeight = "bold";
   row.appendChild(apwRiskTd);
 
   const swlRiskTd = document.createElement("td");
   swlRiskTd.textContent = swlRisk;
-  swlRiskTd.style.display = "none";
+  swlRiskTd.style.color = swlRisk === "High" ? "red" : swlRisk === "Moderate" ? "orange" : "green"; swlRiskTd.style.fontWeight = "bold";
   row.appendChild(swlRiskTd);
 
   const fallsRiskTd = document.createElement("td");
   fallsRiskTd.textContent = fallsRisk;
-  fallsRiskTd.style.display = "none";
+  fallsRiskTd.style.color = fallsRisk === "High" ? "red" : fallsRisk === "Moderate" ? "orange" : "green"; fallsRiskTd.style.fontWeight = "bold";
   row.appendChild(fallsRiskTd);
             
 tableBody.appendChild(row);
