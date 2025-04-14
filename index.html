@@ -684,6 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelector('[name="facilityName"]').addEventListener("change", e => {
     document.querySelector('[name="segment"]').value = facilitySegments[e.target.value] || "";
+    document.querySelector('[name="segment"]').value = facilitySegments[e.target.value] || "";
   });
 
   form.onsubmit = async function(e) {
