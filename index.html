@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,14 +18,14 @@
 <body>
 <h1>Clinical Metrics Entry</h1>
 <form id="entryForm" class="grid">
-  <select name="facilityName" required>
+  <select name="facilityName" id="facilityName" required>
     <option value="">Select Facility</option>
     <option>Allis</option><option>Best Care</option><option>Bradford</option>
     <option>Buchanan</option><option>Century Villa</option><option>Charlestown Place</option>
     <option>Dover</option><option>Morning Breeze</option><option>Park View</option>
     <option>Siena Woods</option><option>Smyrna</option>
   </select>
-  <input name="segment" placeholder="Segment" readonly />
+  <input name="segment" id="segment" placeholder="Segment" readonly />
   <select name="month" required>
     <option value="">Month</option>
     <option>January</option><option>February</option><option>March</option><option>April</option>
@@ -85,9 +86,10 @@ const facilitySegments = {
   "Siena Woods": "Northern Pride", "Smyrna": "Southern Hospitality"
 };
 
-form.facilityName.onchange = e => {
-  form.segment.value = facilitySegments[e.target.value] || "";
-};
+document.getElementById("facilityName").addEventListener("change", function () {
+  const selected = this.value;
+  document.getElementById("segment").value = facilitySegments[selected] || "";
+});
 
 form.onsubmit = async e => {
   e.preventDefault();
@@ -102,9 +104,7 @@ form.onsubmit = async e => {
   if (res.ok) { form.reset(); tableBody.innerHTML = ""; loadData(); }
 };
 
-
-let facilityFilter = "";
-let monthFilter = "";
+let facilityFilter = "", monthFilter = "", searchText = "";
 
 document.getElementById("filterFacility").onchange = e => {
   facilityFilter = e.target.value;
@@ -114,10 +114,6 @@ document.getElementById("filterMonth").onchange = e => {
   monthFilter = e.target.value;
   loadData();
 };
-
-
-let searchText = "";
-
 document.getElementById("searchInput").oninput = e => {
   searchText = e.target.value.toLowerCase();
   loadData();
@@ -129,10 +125,10 @@ function exportToCSV() {
     .then(data => {
       const headers = Object.keys(data[0] || {});
       const csvRows = [
-        headers.join(","),
-        ...data.map(row => headers.map(field => `"${row[field] || ""}"`).join(","))
+        headers.join(","), ...data.map(row => headers.map(field => `"${row[field] || ""}"`).join(","))
       ];
-      const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+      const blob = new Blob([csvRows.join("
+")], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -142,37 +138,29 @@ function exportToCSV() {
 }
 
 async function loadData() {
-
-
   const res = await fetch(api + "/entries");
   const entries = await res.json();
   tableBody.innerHTML = "";
-  
   entries
     .filter(e => !facilityFilter || e.facilityName === facilityFilter)
-    .filter(e => !monthFilter || e.month === monthFilter).filter(e => !searchText || JSON.stringify(e).toLowerCase().includes(searchText))
+    .filter(e => !monthFilter || e.month === monthFilter)
+    .filter(e => !searchText || JSON.stringify(e).toLowerCase().includes(searchText))
     .sort((a, b) => a.facilityName.localeCompare(b.facilityName))
     .forEach(entry => {
-
-    const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-    const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-    const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-    const row = document.createElement("tr");
-    
-    const color = (val, threshold) => parseFloat(val) >= threshold ? 'style="color:red;font-weight:bold;"' : '';
-    
-    const color = (val, threshold) => parseFloat(val) >= threshold ? 'style="color:red;font-weight:bold;"' : '';
-    row.innerHTML = `
-  
-  
-      <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td>
-      <td ${color(apwPct, 3)}>${apwPct}%</td><td ${color(swlPct, 5)}>${swlPct}%</td><td ${color(fallPct, 13)}>${fallPct}%</td>
-      <td class="actions">
-        <button onclick="editEntry('${entry._id}')">Edit</button>
-        <button onclick="deleteEntry('${entry._id}')">Delete</button>
-      </td>`;
-    tableBody.appendChild(row);
-  });
+      const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
+      const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
+      const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
+      const color = (val, threshold) => parseFloat(val) >= threshold ? 'style="color:red;font-weight:bold;"' : '';
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td>
+        <td ${color(apwPct, 3)}>${apwPct}%</td><td ${color(swlPct, 5)}>${swlPct}%</td><td ${color(fallPct, 13)}>${fallPct}%</td>
+        <td class="actions">
+          <button onclick="editEntry('${entry._id}')">Edit</button>
+          <button onclick="deleteEntry('${entry._id}')">Delete</button>
+        </td>`;
+      tableBody.appendChild(row);
+    });
 }
 
 async function deleteEntry(id) {
