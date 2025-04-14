@@ -17,6 +17,22 @@
 <body>
 <h1>Clinical Metrics Entry</h1>
 <form id="entryForm" class="grid">
+<script>
+const facilitySegments = {
+  "Allis": "Midwest", "Best Care": "Southern Hospitality", "Bradford": "Northern Pride",
+  "Buchanan": "Southern Hospitality", "Century Villa": "Northern Pride",
+  "Charlestown Place": "Southern Hospitality", "Dover": "Southern Hospitality",
+  "Morning Breeze": "Northern Pride", "Park View": "Northern Pride",
+  "Siena Woods": "Northern Pride", "Smyrna": "Southern Hospitality"
+};
+document.addEventListener("DOMContentLoaded", () => {
+  const facilitySelect = document.querySelector('[name="facilityName"]');
+  const segmentInput = document.querySelector('[name="segment"]');
+  facilitySelect.onchange = () => {
+    segmentInput.value = facilitySegments[facilitySelect.value] || "";
+  };
+});
+</script>
   <select name="facilityName" required>
     <option value="">Select Facility</option>
     <option>Allis</option><option>Best Care</option><option>Bradford</option>
@@ -90,6 +106,8 @@ form.facilityName.onchange = e => {
 };
 
 form.onsubmit = async e => {
+  e.preventDefault();
+
   e.preventDefault();
   const data = Object.fromEntries(new FormData(form).entries());
   for (let key in data) {
