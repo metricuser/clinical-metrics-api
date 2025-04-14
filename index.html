@@ -119,7 +119,12 @@ form.onsubmit = async e => {
     body: JSON.stringify(data)
   });
 
-  if (res.ok) {
+  
+    const responseJson = await res.json().catch(() => ({}));
+    console.log("✅ Submitted:", data);
+    console.log("✅ Response:", responseJson);
+    if (res.ok) {
+
     form.reset();
     document.querySelector('[name="segment"]').value = "";
     loadData();
@@ -137,7 +142,12 @@ console.log("✅ Dashboard ready: data loaded, scores calculated, form active.")
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   });
-  if (res.ok) { form.reset(); tableBody.innerHTML = ""; 
+  
+    const responseJson = await res.json().catch(() => ({}));
+    console.log("✅ Submitted:", data);
+    console.log("✅ Response:", responseJson);
+    if (res.ok) {
+ form.reset(); tableBody.innerHTML = ""; 
 function riskLevel(entry) {
   let score = 0;
   const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
