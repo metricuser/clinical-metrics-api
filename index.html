@@ -105,7 +105,36 @@ form.facilityName.onchange = e => {
   form.segment.value = facilitySegments[e.target.value] || "";
 };
 
+
 form.onsubmit = async e => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  const payload = {};
+  formData.forEach((value, key) => {
+    payload[key] = (!isNaN(value) && value.trim() !== "") ? Number(value) : value;
+  });
+  payload.timestamp = new Date().toISOString();
+
+  try {
+    const response = await fetch(api + "/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      form.reset();
+      document.querySelector('[name="segment"]').value = "";
+      loadData();
+    } else {
+      alert("❌ Error submitting form.");
+    }
+  } catch (err) {
+    console.error("Submission failed:", err);
+    alert("❌ Network error.");
+  }
+};
+
   e.preventDefault();
   const formData = new FormData(form);
   const formPayload = {};
