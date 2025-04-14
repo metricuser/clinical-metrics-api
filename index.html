@@ -17,6 +17,22 @@
 <body>
 <h1>Clinical Metrics Entry</h1>
 <form id="entryForm" class="grid">
+<script>
+const facilitySegments = {
+  "Allis": "Midwest", "Best Care": "Southern Hospitality", "Bradford": "Northern Pride",
+  "Buchanan": "Southern Hospitality", "Century Villa": "Northern Pride",
+  "Charlestown Place": "Southern Hospitality", "Dover": "Southern Hospitality",
+  "Morning Breeze": "Northern Pride", "Park View": "Northern Pride",
+  "Siena Woods": "Northern Pride", "Smyrna": "Southern Hospitality"
+};
+document.addEventListener("DOMContentLoaded", () => {
+  const facilitySelect = document.querySelector('[name="facilityName"]');
+  const segmentInput = document.querySelector('[name="segment"]');
+  facilitySelect.onchange = () => {
+    segmentInput.value = facilitySegments[facilitySelect.value] || "";
+  };
+});
+</script>
   <select name="facilityName" required>
     <option value="">Select Facility</option>
     <option>Allis</option><option>Best Care</option><option>Bradford</option>
@@ -69,7 +85,7 @@
 </div>
 <table id="dataTable"><thead><tr>
   <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th>
-  <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th><th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th><th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th>
+  <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th><th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th><th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th><th>APW Risk<br><span style="font-size:11px;color:#666;">(Predicted)</span></th><th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th><th>SWL Risk<br><span style="font-size:11px;color:#666;">(Predicted)</span></th><th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th><th>Fall Risk<br><span style="font-size:11px;color:#666;">(Predicted)</span></th>
   <th>Actions</th>
 </tr></thead><tbody></tbody></table>
 
@@ -91,6 +107,27 @@ form.facilityName.onchange = e => {
 
 form.onsubmit = async e => {
   e.preventDefault();
+  const formData = new FormData(form);
+  const data = {};
+  formData.forEach((value, key) => {
+    data[key] = isNaN(value) || value === "" ? value : Number(value);
+  });
+
+  const res = await fetch(api + "/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (res.ok) {
+    form.reset();
+    document.querySelector('[name="segment"]').value = "";
+    loadData();
+  } else {
+    alert("Error submitting data.");
+  }
+
+  e.preventDefault();
   const data = Object.fromEntries(new FormData(form).entries());
   for (let key in data) {
     if (!isNaN(data[key])) data[key] = Number(data[key]);
@@ -99,7 +136,72 @@ form.onsubmit = async e => {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   });
-  if (res.ok) { form.reset(); tableBody.innerHTML = ""; loadData(); }
+  if (res.ok) { form.reset(); tableBody.innerHTML = ""; 
+function riskLevel(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColor(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+
+function riskLevelAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+function riskLevelSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+loadData();
+ }
 };
 
 
@@ -108,11 +210,141 @@ let monthFilter = "";
 
 document.getElementById("filterFacility").onchange = e => {
   facilityFilter = e.target.value;
-  loadData();
+  
+function riskLevel(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColor(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+
+function riskLevelAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+function riskLevelSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+loadData();
+
 };
 document.getElementById("filterMonth").onchange = e => {
   monthFilter = e.target.value;
-  loadData();
+  
+function riskLevel(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColor(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+
+function riskLevelAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+function riskLevelSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+loadData();
+
 };
 
 
@@ -120,7 +352,72 @@ let searchText = "";
 
 document.getElementById("searchInput").oninput = e => {
   searchText = e.target.value.toLowerCase();
-  loadData();
+  
+function riskLevel(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColor(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+
+function riskLevelAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+function riskLevelSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+loadData();
+
 };
 
 function exportToCSV() {
@@ -166,7 +463,8 @@ async function loadData() {
   
   
       <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td>
-      <td ${color(apwPct, 3)}>${apwPct}%</td><td ${color(swlPct, 5)}>${swlPct}%</td><td ${color(fallPct, 13)}>${fallPct}%</td>
+      <td ${color(apwPct, 3)}>${apwPct}%</td><td><span ${riskColorAPW(entry)}>${riskLevelAPW(entry)}</span></td><td ${color(swlPct, 5)}>${swlPct}%</td><td><span ${riskColorSWL(entry)}>${riskLevelSWL(entry)}</span></td><td ${color(fallPct, 13)}>${fallPct}%</td><td><span ${riskColor(entry)}>${riskLevel(entry)}</span></td>
+    <td><span ${riskColor(entry)}>${riskLevel(entry)}</span></td>
       <td class="actions">
         <button onclick="editEntry('${entry._id}')">Edit</button>
         <button onclick="deleteEntry('${entry._id}')">Delete</button>
@@ -177,7 +475,72 @@ async function loadData() {
 
 async function deleteEntry(id) {
   await fetch(api + "/entries/" + id, { method: "DELETE" });
-  loadData();
+  
+function riskLevel(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColor(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+
+function riskLevelAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+function riskLevelSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+loadData();
+
 }
 
 async function editEntry(id) {
@@ -192,7 +555,72 @@ async function editEntry(id) {
   await deleteEntry(id);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+function riskLevel(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColor(entry) {
+  let score = 0;
+  const fallsPercent = entry.census ? (entry.fallsResidents || 0) / entry.census * 100 : 0;
+  if (fallsPercent > 13) score += 2;
+  if ((entry.fallsTotal || 0) > 5) score += 1;
+  if ((entry.fallsInjury || 0) > 1) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+
+function riskLevelAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorAPW(entry) {
+  let score = 0;
+  const apwPercent = entry.census ? (entry.apwResidents || 0) / entry.census * 100 : 0;
+  if (apwPercent > 3) score += 2;
+  if ((entry.apwNew || 0) >= 2) score += 1;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
+function riskLevelSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'High';
+  if (score >= 3) return 'Moderate';
+  return 'Low';
+}
+
+function riskColorSWL(entry) {
+  let score = 0;
+  const swlPercent = entry.census ? (entry.swlResidents || 0) / entry.census * 100 : 0;
+  if (swlPercent > 5) score += 2;
+  if ((entry.swlUnavoidable || 0) === 0 && (entry.swlNew || 0) >= 2) score += 2;
+  if (score >= 6) return 'style="color:red;font-weight:bold;"';
+  if (score >= 3) return 'style="color:orange;font-weight:bold;"';
+  return 'style="color:green;"';
+}
+
 loadData();
+
 </script>
 </body>
 </html>
