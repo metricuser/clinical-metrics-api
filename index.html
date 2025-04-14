@@ -110,7 +110,7 @@ form.onsubmit = async e => {
   const formData = new FormData(form);
   const data = {};
   formData.forEach((value, key) => {
-    data[key] = isNaN(value) || value === "" ? value : Number(value);
+    data[key] = (!isNaN(value) && value.trim() !== "") ? Number(value) : value;
   });
 
   const res = await fetch(api + "/submit", {
@@ -123,6 +123,7 @@ form.onsubmit = async e => {
     form.reset();
     document.querySelector('[name="segment"]').value = "";
     loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
   } else {
     alert("Error submitting data.");
   }
@@ -201,6 +202,7 @@ function riskColorSWL(entry) {
 }
 
 loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
  }
 };
 
@@ -275,6 +277,7 @@ function riskColorSWL(entry) {
 }
 
 loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
 
 };
 document.getElementById("filterMonth").onchange = e => {
@@ -344,6 +347,7 @@ function riskColorSWL(entry) {
 }
 
 loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
 
 };
 
@@ -417,6 +421,7 @@ function riskColorSWL(entry) {
 }
 
 loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
 
 };
 
@@ -540,6 +545,7 @@ function riskColorSWL(entry) {
 }
 
 loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
 
 }
 
@@ -620,6 +626,7 @@ function riskColorSWL(entry) {
 }
 
 loadData();
+console.log("✅ Dashboard ready: data loaded, scores calculated, form active.");
 
 </script>
 </body>
