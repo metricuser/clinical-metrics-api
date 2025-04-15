@@ -73,7 +73,6 @@
 <option value="facility:Siena Woods">Facility - Siena Woods</option>
 <option value="facility:Smyrna">Facility - Smyrna</option>
 </select>
-
 <select id="quarter">
 <option value="">Select Quarter</option>
 <option value="Q1">Q1 (Jan–Mar)</option>
@@ -224,19 +223,7 @@ async function editEntry(id) {
 
 loadData();
 </script>
-<script>
-function loadQuarterlyAverages() {
-  const quarter = document.getElementById("quarter").value;
-  const year = document.getElementById("quarterYear").value;
-  document.getElementById("quarterlyResults").innerHTML = 
-    `<p>📊 Quarterly averages for <strong>${quarter}</strong> in <strong>${year}</strong> will appear here.</p>`;
-}
 
-function loadAnnualAverages() {
-  const year = document.getElementById("annualYear").value;
-  document.getElementById("annualResults").innerHTML = 
-    `<p>📅 Annual averages for <strong>${year}</strong> will appear here.</p>`;
-}
 
 <script>
 const quarterMonths = {
@@ -246,120 +233,70 @@ const quarterMonths = {
   Q4: ["October", "November", "December"]
 };
 
-function getPct(val, total) {
-  return total ? ((val / total) * 100).toFixed(1) + "%" : "0.0%";
+function getScopeFilter(entry, scopeValue) {
+  if (scopeValue === "corporate") return true;
+  if (scopeValue.startsWith("segment:")) return entry.segment === scopeValue.split(":")[1];
+  if (scopeValue.startsWith("facility:")) return entry.facilityName === scopeValue.split(":")[1];
+  return false;
 }
 
-function buildAverageTable(title, data) {
-  let totalCensus = 0, totalAPW = 0, totalSWL = 0, totalFalls = 0;
-  data.forEach(row => {
-    totalAPW += row.apw;
-    totalSWL += row.swl;
-    totalFalls += row.falls;
-    totalCensus += row.census;
+function calculateAverages(data) {
+  let totalAPW = 0, totalSWL = 0, totalFalls = 0, totalCensus = 0;
+  data.forEach(entry => {
+    totalAPW += Number(entry.apwResidents || 0);
+    totalSWL += Number(entry.swlResidents || 0);
+    totalFalls += Number(entry.fallsResidents || 0);
+    totalCensus += Number(entry.census || 0);
   });
-
+  const getPct = (val) => totalCensus ? ((val / totalCensus) * 100).toFixed(1) + "%" : "0.0%";
   return `
-    <h4>${title}</h4>
     <table style="width:100%;margin-bottom:20px;border-collapse:collapse;">
       <tr><th style="text-align:left;">APW%</th><th>SWL%</th><th>Falls%</th></tr>
       <tr>
-        <td>${getPct(totalAPW, totalCensus)}</td>
-        <td>${getPct(totalSWL, totalCensus)}</td>
-        <td>${getPct(totalFalls, totalCensus)}</td>
+        <td>${getPct(totalAPW)}</td>
+        <td>${getPct(totalSWL)}</td>
+        <td>${getPct(totalFalls)}</td>
       </tr>
-    </table>`;
+    </table>
+  `;
 }
 
 function loadQuarterlyAverages() {
-  const quarter = document.getElementById("quarter").value;
   const year = document.getElementById("quarterYear").value;
+  const quarter = document.getElementById("quarter").value;
+  const scope = document.getElementById("averageScope").value;
   const months = quarterMonths[quarter];
-  if (!quarter || !year) return alert("Please select both quarter and year.");
+  if (!year || !quarter) return alert("Select both quarter and year.");
 
   fetch("https://clinical-metrics-api.onrender.com/entries")
     .then(res => res.json())
     .then(data => {
-      const filtered = data.filter(e => months.includes(e.month) && e.year === year);
-
-      const corporate = [];
-      const segments = {};
-      const facilities = {};
-
-      filtered.forEach(e => {
-        const row = {
-          apw: +e.apwResidents || 0,
-          swl: +e.swlResidents || 0,
-          falls: +e.fallsResidents || 0,
-          census: +e.census || 0
-        };
-
-        corporate.push(row);
-
-        if (!segments[e.segment]) segments[e.segment] = [];
-        segments[e.segment].push(row);
-
-        if (!facilities[e.facilityName]) facilities[e.facilityName] = [];
-        facilities[e.facilityName].push(row);
-      });
-
-      let html = `<h3>Quarterly Averages for ${quarter} ${year}</h3>`;
-      html += buildAverageTable("Corporate", corporate);
-
-      for (const [segment, entries] of Object.entries(segments)) {
-        html += buildAverageTable("Segment: " + segment, entries);
-      }
-
-      for (const [facility, entries] of Object.entries(facilities)) {
-        html += buildAverageTable("Facility: " + facility, entries);
-      }
-
-      document.getElementById("quarterlyResults").innerHTML = html;
+      const filtered = data.filter(e =>
+        e.year === year &&
+        months.includes(e.month) &&
+        getScopeFilter(e, scope)
+      );
+      document.getElementById("quarterlyResults").innerHTML =
+        `<h3>Quarterly Averages (${quarter} ${year}) - ${scope.replace(":", " - ")}</h3>` +
+        calculateAverages(filtered);
     });
 }
 
 function loadAnnualAverages() {
   const year = document.getElementById("annualYear").value;
-  if (!year) return alert("Please select a year.");
+  const scope = document.getElementById("averageScope").value;
+  if (!year) return alert("Select a year.");
 
   fetch("https://clinical-metrics-api.onrender.com/entries")
     .then(res => res.json())
     .then(data => {
-      const filtered = data.filter(e => e.year === year);
-
-      const corporate = [];
-      const segments = {};
-      const facilities = {};
-
-      filtered.forEach(e => {
-        const row = {
-          apw: +e.apwResidents || 0,
-          swl: +e.swlResidents || 0,
-          falls: +e.fallsResidents || 0,
-          census: +e.census || 0
-        };
-
-        corporate.push(row);
-
-        if (!segments[e.segment]) segments[e.segment] = [];
-        segments[e.segment].push(row);
-
-        if (!facilities[e.facilityName]) facilities[e.facilityName] = [];
-        facilities[e.facilityName].push(row);
-      });
-
-      let html = `<h3>Annual Averages for ${year}</h3>`;
-      html += buildAverageTable("Corporate", corporate);
-
-      for (const [segment, entries] of Object.entries(segments)) {
-        html += buildAverageTable("Segment: " + segment, entries);
-      }
-
-      for (const [facility, entries] of Object.entries(facilities)) {
-        html += buildAverageTable("Facility: " + facility, entries);
-      }
-
-      document.getElementById("annualResults").innerHTML = html;
+      const filtered = data.filter(e =>
+        e.year === year &&
+        getScopeFilter(e, scope)
+      );
+      document.getElementById("annualResults").innerHTML =
+        `<h3>Annual Averages (${year}) - ${scope.replace(":", " - ")}</h3>` +
+        calculateAverages(filtered);
     });
 }
 </script>
