@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.error('MongoDB error:', err));
 
 // Load Models
-const FormData = require('./FormData.model');
+const FormData = require('./formdata.model');
 const Facility = require('./Facility.model'); // NEW
 
 // Delete entry
