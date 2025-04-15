@@ -52,6 +52,32 @@
 <textarea name="notes" placeholder="Notes"></textarea>
 <button type="submit">Submit</button>
 </form>
+
+<h2>Quarterly &amp; Annual Averages</h2>
+<div style="background:#fff;padding:20px;margin-bottom:20px;border-radius:8px;box-shadow:0 0 5px #ccc;">
+<label for="quarter">Quarter:</label>
+<select id="quarter">
+<option value="">Select Quarter</option>
+<option value="Q1">Q1 (Jan–Mar)</option>
+<option value="Q2">Q2 (Apr–Jun)</option>
+<option value="Q3">Q3 (Jul–Sep)</option>
+<option value="Q4">Q4 (Oct–Dec)</option>
+</select>
+<select id="quarterYear">
+<option value="">Year</option>
+<option>2024</option><option>2025</option><option>2026</option>
+</select>
+<button onclick="loadQuarterlyAverages()">Show Quarterly Averages</button>
+<br/><br/>
+<label for="annualYear">Annual Year:</label>
+<select id="annualYear">
+<option value="">Year</option>
+<option>2024</option><option>2025</option><option>2026</option>
+</select>
+<button onclick="loadAnnualAverages()">Show Annual Averages</button>
+<div id="quarterlyResults" style="margin-top:20px;"></div>
+<div id="annualResults" style="margin-top:20px;"></div>
+</div>
 <h2>Submitted Entries</h2>
 <div style="margin-bottom:10px;">
 <input id="searchInput" placeholder="Search..." style="max-width:200px; margin-right:10px;"/>
@@ -185,6 +211,21 @@ async function editEntry(id) {
 }
 
 loadData();
+</script>
+
+<script>
+function loadQuarterlyAverages() {
+  const quarter = document.getElementById("quarter").value;
+  const year = document.getElementById("quarterYear").value;
+  document.getElementById("quarterlyResults").innerHTML = 
+    `<p>📊 Quarterly averages for <strong>${quarter}</strong> in <strong>${year}</strong> will appear here.</p>`;
+}
+
+function loadAnnualAverages() {
+  const year = document.getElementById("annualYear").value;
+  document.getElementById("annualResults").innerHTML = 
+    `<p>📅 Annual averages for <strong>${year}</strong> will appear here.</p>`;
+}
 </script>
 </body>
 </html>
