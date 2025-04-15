@@ -226,6 +226,132 @@ function loadAnnualAverages() {
   document.getElementById("annualResults").innerHTML = 
     `<p>📅 Annual averages for <strong>${year}</strong> will appear here.</p>`;
 }
+
+<script>
+const quarterMonths = {
+  Q1: ["January", "February", "March"],
+  Q2: ["April", "May", "June"],
+  Q3: ["July", "August", "September"],
+  Q4: ["October", "November", "December"]
+};
+
+function getPct(val, total) {
+  return total ? ((val / total) * 100).toFixed(1) + "%" : "0.0%";
+}
+
+function buildAverageTable(title, data) {
+  let totalCensus = 0, totalAPW = 0, totalSWL = 0, totalFalls = 0;
+  data.forEach(row => {
+    totalAPW += row.apw;
+    totalSWL += row.swl;
+    totalFalls += row.falls;
+    totalCensus += row.census;
+  });
+
+  return `
+    <h4>${title}</h4>
+    <table style="width:100%;margin-bottom:20px;border-collapse:collapse;">
+      <tr><th style="text-align:left;">APW%</th><th>SWL%</th><th>Falls%</th></tr>
+      <tr>
+        <td>${getPct(totalAPW, totalCensus)}</td>
+        <td>${getPct(totalSWL, totalCensus)}</td>
+        <td>${getPct(totalFalls, totalCensus)}</td>
+      </tr>
+    </table>`;
+}
+
+function loadQuarterlyAverages() {
+  const quarter = document.getElementById("quarter").value;
+  const year = document.getElementById("quarterYear").value;
+  const months = quarterMonths[quarter];
+  if (!quarter || !year) return alert("Please select both quarter and year.");
+
+  fetch("https://clinical-metrics-api.onrender.com/entries")
+    .then(res => res.json())
+    .then(data => {
+      const filtered = data.filter(e => months.includes(e.month) && e.year === year);
+
+      const corporate = [];
+      const segments = {};
+      const facilities = {};
+
+      filtered.forEach(e => {
+        const row = {
+          apw: +e.apwResidents || 0,
+          swl: +e.swlResidents || 0,
+          falls: +e.fallsResidents || 0,
+          census: +e.census || 0
+        };
+
+        corporate.push(row);
+
+        if (!segments[e.segment]) segments[e.segment] = [];
+        segments[e.segment].push(row);
+
+        if (!facilities[e.facilityName]) facilities[e.facilityName] = [];
+        facilities[e.facilityName].push(row);
+      });
+
+      let html = `<h3>Quarterly Averages for ${quarter} ${year}</h3>`;
+      html += buildAverageTable("Corporate", corporate);
+
+      for (const [segment, entries] of Object.entries(segments)) {
+        html += buildAverageTable("Segment: " + segment, entries);
+      }
+
+      for (const [facility, entries] of Object.entries(facilities)) {
+        html += buildAverageTable("Facility: " + facility, entries);
+      }
+
+      document.getElementById("quarterlyResults").innerHTML = html;
+    });
+}
+
+function loadAnnualAverages() {
+  const year = document.getElementById("annualYear").value;
+  if (!year) return alert("Please select a year.");
+
+  fetch("https://clinical-metrics-api.onrender.com/entries")
+    .then(res => res.json())
+    .then(data => {
+      const filtered = data.filter(e => e.year === year);
+
+      const corporate = [];
+      const segments = {};
+      const facilities = {};
+
+      filtered.forEach(e => {
+        const row = {
+          apw: +e.apwResidents || 0,
+          swl: +e.swlResidents || 0,
+          falls: +e.fallsResidents || 0,
+          census: +e.census || 0
+        };
+
+        corporate.push(row);
+
+        if (!segments[e.segment]) segments[e.segment] = [];
+        segments[e.segment].push(row);
+
+        if (!facilities[e.facilityName]) facilities[e.facilityName] = [];
+        facilities[e.facilityName].push(row);
+      });
+
+      let html = `<h3>Annual Averages for ${year}</h3>`;
+      html += buildAverageTable("Corporate", corporate);
+
+      for (const [segment, entries] of Object.entries(segments)) {
+        html += buildAverageTable("Segment: " + segment, entries);
+      }
+
+      for (const [facility, entries] of Object.entries(facilities)) {
+        html += buildAverageTable("Facility: " + facility, entries);
+      }
+
+      document.getElementById("annualResults").innerHTML = html;
+    });
+}
 </script>
+
 </body>
 </html>
