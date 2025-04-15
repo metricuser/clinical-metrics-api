@@ -17,7 +17,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Load Models
 const FormData = require('./formData.model');
-const Facility = require('./Facility.model'); // NEW
+const Facility = require('./facility.model'); // NEW
 
 // Delete entry
 app.delete('/entries/:id', async (req, res) => {
