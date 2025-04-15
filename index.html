@@ -1,66 +1,124 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clinical Metrics Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
+    form, table { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 0 8px #ccc; }
+    input, select, textarea, button { margin: 5px 0; padding: 8px; width: 100%; max-width: 300px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background-color: #f4f4f4; }
-    .highlight-red { color: red; font-weight: bold; }
-    .highlight-orange { color: orange; font-weight: bold; }
-    .highlight-green { color: green; font-weight: bold; }
+    .green { color: green; font-weight: bold; }
+    .orange { color: orange; font-weight: bold; }
+    .red { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h2>Clinical Metrics Dashboard (Fixed Display)</h2>
-  <p>This version fixes facility mapping, dropdowns, and removes NaN% errors.</p>
+  <h2>Clinical Metrics Entry</h2>
+  <form id="entryForm">
+    <select name="facilityName" id="facilitySelect" required>
+      <option value="">Select Facility</option>
+    </select>
+    <input name="segment" id="segmentField" placeholder="Segment" readonly />
+    <select name="month" required>
+      <option value="">Select Month</option>
+      <option>January</option><option>February</option><option>March</option>
+      <option>April</option><option>May</option><option>June</option>
+      <option>July</option><option>August</option><option>September</option>
+      <option>October</option><option>November</option><option>December</option>
+    </select>
+    <select name="year" required>
+      <option value="">Select Year</option>
+      <option>2024</option><option>2025</option><option>2026</option>
+      <option>2027</option><option>2028</option><option>2029</option><option>2030</option>
+    </select>
+    <input type="number" name="apwResidents" placeholder="APW Residents" />
+    <input type="number" name="swlResidents" placeholder="SWL Residents" />
+    <input type="number" name="fallsResidents" placeholder="Falls Residents" />
+    <input type="number" name="census" placeholder="Census" />
+    <textarea name="notes" placeholder="Notes"></textarea>
+    <button type="submit">Submit</button>
+  </form>
 
-  <!-- Placeholder UI components -->
-  <select id="facilitySelect"><option>Loading facilities...</option></select>
+  <div id="summarySection"><h3>Summary (Monthly / Quarterly / Annual)</h3><div id="summaryOutput">Loading summary...</div></div>
+
+  <h2>Submitted Entries</h2>
   <table>
     <thead>
       <tr>
-        <th>Facility</th>
-        <th>Segment</th>
-        <th>Month</th>
-        <th>Year</th>
-        <th>Census</th>
-        <th>APW%</th>
-        <th>SWL%</th>
-        <th>Falls%</th>
+        <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th>Census</th>
+        <th>APW%</th><th>SWL%</th><th>Falls%</th><th>Notes</th>
       </tr>
     </thead>
-    <tbody id="entriesTable">
-      <tr>
-        <td>Sample Facility</td>
-        <td>Midwest</td>
-        <td>March</td>
-        <td>2025</td>
-        <td>93</td>
-        <td class="highlight-green">2.3%</td>
-        <td class="highlight-orange">5.2%</td>
-        <td class="highlight-red">14.1%</td>
-      </tr>
-    </tbody>
+    <tbody id="entriesTable"></tbody>
   </table>
 
-  <script>
-    // Sample validation for census percentage fix
-    function formatPercent(numerator, denominator) {
-      if (!denominator || denominator === 0 || !numerator) return '—';
-      return ((numerator / denominator) * 100).toFixed(1) + '%';
-    }
+<script>
+const api = "https://clinical-metrics-api.onrender.com";
 
-    // Simulate fetch dropdown fix
-    document.getElementById('facilitySelect').innerHTML = `
-      <option value="all">All Facilities</option>
-      <option value="Allis">Allis</option>
-      <option value="Best Care">Best Care</option>
-    `;
-  </script>
+async function loadFacilities() {
+  const res = await fetch(api + "/facilities");
+  const facilities = await res.json();
+  const select = document.getElementById("facilitySelect");
+  facilities.forEach(fac => {
+    const opt = document.createElement("option");
+    opt.value = fac.name;
+    opt.textContent = fac.name;
+    opt.dataset.segment = fac.segment;
+    select.appendChild(opt);
+  });
+  select.onchange = () => {
+    const seg = select.selectedOptions[0].dataset.segment;
+    document.getElementById("segmentField").value = seg || "";
+  };
+}
+
+document.getElementById("entryForm").onsubmit = async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const entry = {};
+  formData.forEach((value, key) => {
+    entry[key] = key === "notes" ? value : (isNaN(value) ? value : Number(value));
+  });
+  await fetch(api + "/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry)
+  });
+  e.target.reset();
+  document.getElementById("segmentField").value = "";
+  loadEntries();
+};
+
+function formatPercent(n, d, threshold) {
+  if (!d || !n) return "—";
+  const pct = ((n / d) * 100).toFixed(1);
+  const c = +pct > threshold ? 'red' : (+pct == threshold ? 'orange' : 'green');
+  return `<span class="${c}">${pct}%</span>`;
+}
+
+async function loadEntries() {
+  const res = await fetch(api + "/entries");
+  const data = await res.json();
+  const table = document.getElementById("entriesTable");
+  table.innerHTML = "";
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.facilityName}</td><td>${row.segment}</td><td>${row.month}</td><td>${row.year}</td><td>${row.census}</td>
+      <td>${formatPercent(row.apwResidents, row.census, 3)}</td>
+      <td>${formatPercent(row.swlResidents, row.census, 5)}</td>
+      <td>${formatPercent(row.fallsResidents, row.census, 13)}</td>
+      <td>${row.notes || ""}</td>`;
+    table.appendChild(tr);
+  });
+}
+
+loadFacilities();
+loadEntries();
+</script>
 </body>
 </html>
-
