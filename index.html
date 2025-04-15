@@ -52,10 +52,28 @@
 <textarea name="notes" placeholder="Notes"></textarea>
 <button type="submit">Submit</button>
 </form>
-
 <h2>Quarterly &amp; Annual Averages</h2>
 <div style="background:#fff;padding:20px;margin-bottom:20px;border-radius:8px;box-shadow:0 0 5px #ccc;">
 <label for="quarter">Quarter:</label>
+<label for="averageScope">Scope:</label>
+<select id="averageScope">
+<option value="corporate">Corporate</option>
+<option value="segment:Midwest">Segment - Midwest</option>
+<option value="segment:Southern Hospitality">Segment - Southern Hospitality</option>
+<option value="segment:Northern Pride">Segment - Northern Pride</option>
+<option value="facility:Allis">Facility - Allis</option>
+<option value="facility:Best Care">Facility - Best Care</option>
+<option value="facility:Bradford">Facility - Bradford</option>
+<option value="facility:Buchanan">Facility - Buchanan</option>
+<option value="facility:Century Villa">Facility - Century Villa</option>
+<option value="facility:Charlestown Place">Facility - Charlestown Place</option>
+<option value="facility:Dover">Facility - Dover</option>
+<option value="facility:Morning Breeze">Facility - Morning Breeze</option>
+<option value="facility:Park View">Facility - Park View</option>
+<option value="facility:Siena Woods">Facility - Siena Woods</option>
+<option value="facility:Smyrna">Facility - Smyrna</option>
+</select>
+
 <select id="quarter">
 <option value="">Select Quarter</option>
 <option value="Q1">Q1 (Jan–Mar)</option>
@@ -63,17 +81,11 @@
 <option value="Q3">Q3 (Jul–Sep)</option>
 <option value="Q4">Q4 (Oct–Dec)</option>
 </select>
-<select id="quarterYear">
-<option value="">Year</option>
-<option>2024</option><option>2025</option><option>2026</option>
-</select>
+<select id="quarterYear"><option value="">Year</option><option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option></select>
 <button onclick="loadQuarterlyAverages()">Show Quarterly Averages</button>
 <br/><br/>
 <label for="annualYear">Annual Year:</label>
-<select id="annualYear">
-<option value="">Year</option>
-<option>2024</option><option>2025</option><option>2026</option>
-</select>
+<select id="annualYear"><option value="">Year</option><option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option></select>
 <button onclick="loadAnnualAverages()">Show Annual Averages</button>
 <div id="quarterlyResults" style="margin-top:20px;"></div>
 <div id="annualResults" style="margin-top:20px;"></div>
@@ -212,7 +224,6 @@ async function editEntry(id) {
 
 loadData();
 </script>
-
 <script>
 function loadQuarterlyAverages() {
   const quarter = document.getElementById("quarter").value;
@@ -352,7 +363,5 @@ function loadAnnualAverages() {
     });
 }
 </script>
-
 </body>
 </html>
-
