@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +7,13 @@
   <style>
     body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
     h1, h2 { font-size: 24px; }
-    form, table { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+    form, table, .summary { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
     input, select, button, textarea { padding: 6px; margin: 6px 0; width: 100%; max-width: 300px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
     .actions button { margin-right: 5px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .summary { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -22,13 +24,13 @@
     <option value="">Select Facility</option>
   </select>
   <input name="segment" id="segmentField" placeholder="Segment" readonly />
-  <select name="month" required>
+  <select name="month" id="monthSelect" required>
     <option value="">Month</option>
     <option>January</option><option>February</option><option>March</option><option>April</option>
     <option>May</option><option>June</option><option>July</option><option>August</option>
     <option>September</option><option>October</option><option>November</option><option>December</option>
   </select>
-  <select name="year" required>
+  <select name="year" id="yearSelect" required>
     <option value="">Year</option>
     <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
     <option>2028</option><option>2029</option><option>2030</option>
@@ -46,102 +48,23 @@
   <button type="submit">Submit</button>
 </form>
 
+<div class="summary" id="summarySection">Loading summary...</div>
+
 <h2>Submitted Entries</h2>
 <table id="dataTable">
   <thead>
     <tr>
       <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th>
-      <th>APW%</th><th>SWL%</th><th>Falls%</th><th>Actions</th>
+      <th>Census</th>
+      <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th>
+      <th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th>
+      <th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody></tbody>
 </table>
 
-<script>
-const api = "https://clinical-metrics-api.onrender.com";
-const form = document.getElementById("entryForm");
-const facilityDropdown = document.getElementById("facilityDropdown");
-const segmentField = document.getElementById("segmentField");
-const tableBody = document.querySelector("#dataTable tbody");
-
-// Load facilities and populate dropdown
-async function loadFacilities() {
-  const res = await fetch(`${api}/facilities`);
-  const facilities = await res.json();
-
-  facilities.forEach(fac => {
-    const option = document.createElement("option");
-    option.value = fac.name;
-    option.dataset.segment = fac.segment;
-    option.textContent = fac.name;
-    facilityDropdown.appendChild(option);
-  });
-
-  facilityDropdown.onchange = e => {
-    const selected = e.target.selectedOptions[0];
-    segmentField.value = selected.dataset.segment || "";
-  };
-}
-
-// Submit form data
-form.onsubmit = async e => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(form).entries());
-  for (let key in data) if (!isNaN(data[key])) data[key] = Number(data[key]);
-  const res = await fetch(api + "/submit", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-  if (res.ok) { form.reset(); segmentField.value = ""; loadData(); }
-};
-
-// Load existing data
-async function loadData() {
-  const res = await fetch(api + "/entries");
-  const entries = await res.json();
-  tableBody.innerHTML = "";
-
-  entries.forEach(entry => {
-    const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-    const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-    const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-
-    const color = (val, threshold) => parseFloat(val) >= threshold ? 'style="color:red;font-weight:bold;"' : '';
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${entry.facilityName}</td><td>${entry.segment}</td><td>${entry.month}</td><td>${entry.year}</td>
-      <td ${color(apwPct, 3)}>${apwPct}%</td>
-      <td ${color(swlPct, 5)}>${swlPct}%</td>
-      <td ${color(fallPct, 13)}>${fallPct}%</td>
-      <td class="actions">
-        <button onclick="editEntry('${entry._id}')">Edit</button>
-        <button onclick="deleteEntry('${entry._id}')">Delete</button>
-      </td>`;
-    tableBody.appendChild(row);
-  });
-}
-
-async function deleteEntry(id) {
-  await fetch(api + "/entries/" + id, { method: "DELETE" });
-  loadData();
-}
-
-async function editEntry(id) {
-  const res = await fetch(api + "/entries");
-  const entries = await res.json();
-  const entry = entries.find(e => e._id === id);
-  if (!entry) return;
-  Object.keys(entry).forEach(key => {
-    const field = form.querySelector(`[name="${key}"]`);
-    if (field) field.value = entry[key];
-  });
-  await deleteEntry(id);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-loadFacilities();
-loadData();
-</script>
+<script src="https://clinical-metrics.onrender.com/scripts/clinical-dashboard.js"></script>
 </body>
 </html>
-
