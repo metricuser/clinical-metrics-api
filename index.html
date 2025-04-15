@@ -52,6 +52,45 @@
 <textarea name="notes" placeholder="Notes"></textarea>
 <button type="submit">Submit</button>
 </form>
+
+<h2 style="margin-top:30px;">Segment Averages by Month/Year</h2>
+<div style="background:#fff;padding:20px;border-radius:8px;box-shadow:0 0 5px #ccc;margin-bottom:20px;">
+  <label>Month:
+    <select id="segmentMonth">
+      <option value="">All Months</option>
+      <option>January</option><option>February</option><option>March</option><option>April</option>
+      <option>May</option><option>June</option><option>July</option><option>August</option>
+      <option>September</option><option>October</option><option>November</option><option>December</option>
+    </select>
+  </label>
+  <label>Year:
+    <select id="segmentYear">
+      <option value="">All Years</option>
+      <option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option>
+    </select>
+  </label>
+  <button onclick="loadSegmentAndCorporateAverages()">Refresh</button>
+  <table style="margin-top:15px;width:100%;border-collapse:collapse;">
+    <thead>
+      <tr><th>Segment</th><th>Avg APW%</th><th>Avg SWL%</th><th>Avg Falls%</th></tr>
+    </thead>
+    <tbody id="segmentTable"></tbody>
+  </table>
+</div>
+
+<h2 style="margin-top:30px;">Corporate Averages</h2>
+<div style="background:#fff;padding:20px;border-radius:8px;box-shadow:0 0 5px #ccc;margin-bottom:20px;">
+  <table style="width:100%;border-collapse:collapse;">
+    <thead><tr><th>APW%</th><th>SWL%</th><th>Falls%</th></tr></thead>
+    <tbody>
+      <tr>
+        <td id="corpAPW">0.0%</td>
+        <td id="corpSWL">0.0%</td>
+        <td id="corpFalls">0.0%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 <h2>Submitted Entries</h2>
 <div style="margin-bottom:10px;">
 <input id="searchInput" placeholder="Search..." style="max-width:200px; margin-right:10px;"/>
@@ -186,5 +225,83 @@ async function editEntry(id) {
 
 loadData();
 </script>
+
+<script>
+function getPct(value, total) {
+  return total ? ((value / total) * 100).toFixed(1) : "0.0";
+}
+
+function loadSegmentAndCorporateAverages() {
+  fetch("https://clinical-metrics-api.onrender.com/entries")
+    .then(res => res.json())
+    .then(data => {
+      const month = document.getElementById("segmentMonth").value;
+      const year = document.getElementById("segmentYear").value;
+      const segments = {
+        "Midwest": [], "Southern Hospitality": [], "Northern Pride": []
+      };
+      const corpAll = [];
+
+      data.forEach(entry => {
+        if ((month && entry.month !== month) || (year && entry.year !== year)) return;
+        if (!entry.segment || !entry.census) return;
+
+        const row = {
+          apw: parseFloat(entry.apwResidents || 0),
+          swl: parseFloat(entry.swlResidents || 0),
+          falls: parseFloat(entry.fallsResidents || 0),
+          census: parseFloat(entry.census || 0)
+        };
+
+        corpAll.push(row);
+        if (segments[entry.segment]) {
+          segments[entry.segment].push(row);
+        }
+      });
+
+      const tbody = document.getElementById("segmentTable");
+      tbody.innerHTML = "";
+
+      Object.keys(segments).forEach(name => {
+        const entries = segments[name];
+        let totalApw = 0, totalSwl = 0, totalFalls = 0, totalCensus = 0;
+
+        entries.forEach(e => {
+          totalApw += e.apw;
+          totalSwl += e.swl;
+          totalFalls += e.falls;
+          totalCensus += e.census;
+        });
+
+        const avgApw = getPct(totalApw, totalCensus);
+        const avgSwl = getPct(totalSwl, totalCensus);
+        const avgFalls = getPct(totalFalls, totalCensus);
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${name}</td>
+          <td>${avgApw}%</td>
+          <td>${avgSwl}%</td>
+          <td>${avgFalls}%</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      // Corporate average
+      let corpApw = 0, corpSwl = 0, corpFalls = 0, corpCensus = 0;
+      corpAll.forEach(e => {
+        corpApw += e.apw;
+        corpSwl += e.swl;
+        corpFalls += e.falls;
+        corpCensus += e.census;
+      });
+
+      document.getElementById("corpAPW").textContent = getPct(corpApw, corpCensus) + "%";
+      document.getElementById("corpSWL").textContent = getPct(corpSwl, corpCensus) + "%";
+      document.getElementById("corpFalls").textContent = getPct(corpFalls, corpCensus) + "%";
+    });
+}
+</script>
+
 </body>
 </html>
