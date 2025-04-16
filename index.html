@@ -153,7 +153,7 @@ document.getElementById("searchInput").oninput = e => { searchText = e.target.va
 
 
 function exportToCSV() {
-  const filtered = filteredData();
+  const filtered = typeof filteredData === "function" ? filteredData() : (Array.isArray(data) ? data : []);
   const csvRows = [["Facility", "Segment", "Month", "Year", "Census", "APW%", "SWL%", "Falls%", "Notes"]];
 
   filtered.forEach(row => {
@@ -167,11 +167,11 @@ function exportToCSV() {
     const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
 
     csvRows.push([
-      row.facilityName,
-      row.segment,
-      row.month,
-      row.year,
-      row.census,
+      row.facilityName || "",
+      row.segment || "",
+      row.month || "",
+      row.year || "",
+      row.census || "",
       apwPct,
       swlPct,
       fallsPct,
@@ -180,8 +180,9 @@ function exportToCSV() {
     ]);
   });
 
-  const blob = new Blob([csvRows.map(r => r.join(",")).join("
-")], { type: "text/csv" });
+  const csvContent = csvRows.map(r => r.join(",")).join("
+");
+  const blob = new Blob([csvContent], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = "clinical_metrics.csv";
