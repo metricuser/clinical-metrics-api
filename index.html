@@ -2,66 +2,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clinical Metrics Dashboard</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    table { width: 100%; border-collapse: collapse; }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-    .high { color: red; font-weight: bold; }
-    .moderate { color: orange; font-weight: bold; }
-    .low { color: green; font-weight: bold; }
+    th { background-color: #f4f4f4; }
+    .green { color: green; font-weight: bold; }
+    .orange { color: orange; font-weight: bold; }
+    .red { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
   <h2>Clinical Metrics Entry</h2>
-  <form>
-    <select id="facilityDropdown"><option>Select Facility</option></select>
-    <input placeholder="Segment" id="segment" />
-    <input placeholder="Month" />
-    <input placeholder="Year" />
-    <input placeholder="APW Residents" />
-    <input placeholder="SWL Residents" />
-    <input placeholder="Falls Residents" />
-    <input placeholder="Census" />
-    <input placeholder="Notes" />
+  <form id="clinicalForm">
+    <select id="facilitySelect">
+      <option value="">Select Facility</option>
+      <option>Allis</option>
+      <option>Best Care</option>
+      <option>Bradford</option>
+      <option>Buchanan</option>
+    </select>
+    <input type="text" id="segment" placeholder="Segment" readonly />
+    <input type="text" id="month" placeholder="Month" />
+    <input type="number" id="year" placeholder="Year" />
+    <input type="number" id="apw" placeholder="APW Residents" />
+    <input type="number" id="swl" placeholder="SWL Residents" />
+    <input type="number" id="falls" placeholder="Falls Residents" />
+    <input type="number" id="census" placeholder="Census" />
+    <textarea id="notes" placeholder="Notes"></textarea>
     <button type="submit">Submit</button>
   </form>
 
-  <h3>Submitted Entries</h3>
   <button onclick="exportCSV()">Export CSV</button>
+
+  <h3>Submitted Entries</h3>
   <table id="entriesTable">
     <thead>
       <tr>
-        <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th>Census</th>
-        <th>APW%</th><th>SWL%</th><th>Falls%</th><th>Notes</th>
+        <th>Facility</th>
+        <th>Segment</th>
+        <th>Month</th>
+        <th>Year</th>
+        <th>Census</th>
+        <th>APW%</th>
+        <th>SWL%</th>
+        <th>Falls%</th>
+        <th>Notes</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>Sample Facility</td><td>Midwest</td><td>March</td><td>2025</td><td>93</td>
-        <td class="low">2.3%</td><td class="moderate">5.2%</td><td class="high">14.1%</td><td>0</td>
-      </tr>
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <script>
+    const form = document.getElementById("clinicalForm");
+    const tableBody = document.querySelector("#entriesTable tbody");
+
+    function getClass(percent, limit) {
+      return percent >= limit ? "red" : percent >= limit * 0.8 ? "orange" : "green";
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const facility = document.getElementById("facilitySelect").value;
+      const segment = document.getElementById("segment").value || "Midwest";
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      const apw = parseFloat(document.getElementById("apw").value);
+      const swl = parseFloat(document.getElementById("swl").value);
+      const falls = parseFloat(document.getElementById("falls").value);
+      const census = parseFloat(document.getElementById("census").value);
+      const notes = document.getElementById("notes").value;
+
+      const apwPct = ((apw / census) * 100).toFixed(1);
+      const swlPct = ((swl / census) * 100).toFixed(1);
+      const fallsPct = ((falls / census) * 100).toFixed(1);
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${facility}</td>
+        <td>${segment}</td>
+        <td>${month}</td>
+        <td>${year}</td>
+        <td>${census}</td>
+        <td class="${getClass(apwPct, 3)}">${apwPct}%</td>
+        <td class="${getClass(swlPct, 5)}">${swlPct}%</td>
+        <td class="${getClass(fallsPct, 13)}">${fallsPct}%</td>
+        <td>${notes}</td>
+      `;
+      tableBody.appendChild(row);
+      form.reset();
+    });
+
     function exportCSV() {
-      let csvContent = "data:text/csv;charset=utf-8,";
-      const rows = document.querySelectorAll("table tr");
-      rows.forEach(row => {
-        let rowData = Array.from(row.querySelectorAll("th, td"))
-                           .map(cell => cell.innerText)
-                           .join(",");
-        csvContent += rowData + "\n";
+      let csv = "Facility,Segment,Month,Year,Census,APW%,SWL%,Falls%,Notes
+";
+      document.querySelectorAll("#entriesTable tbody tr").forEach(row => {
+        const cols = Array.from(row.children).map(td => td.textContent);
+        csv += cols.join(",") + "\n";
       });
+
+      const blob = new Blob([csv], { type: "text/csv" });
       const link = document.createElement("a");
-      link.setAttribute("href", encodeURI(csvContent));
-      link.setAttribute("download", "clinical_metrics.csv");
-      document.body.appendChild(link);
+      link.href = URL.createObjectURL(blob);
+      link.download = "clinical-metrics.csv";
       link.click();
-      document.body.removeChild(link);
     }
   </script>
 </body>
