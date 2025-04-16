@@ -222,9 +222,30 @@ async function editEntry(id) {
 }
 
 loadData();
+
+
+document.getElementById("exportCSV").addEventListener("click", function () {
+    const rows = document.querySelectorAll("#submittedEntriesTable tbody tr");
+    let csv = "Facility,Segment,Month,Year,Census,APW%,SWL%,Falls%\n";
+
+    rows.forEach((row) => {
+        if (row.style.display === "none") return; // Respect current filters
+        const cells = row.querySelectorAll("td");
+        const data = Array.from(cells).slice(0, 8).map((cell) => cell.innerText.trim());
+        csv += data.join(",") + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("hidden", "");
+    a.setAttribute("href", url);
+    a.setAttribute("download", "clinical_metrics.csv");
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+});
 </script>
-
-
 <script>
 const quarterMonths = {
   Q1: ["January", "February", "March"],
@@ -302,4 +323,3 @@ function loadAnnualAverages() {
 </script>
 </body>
 </html>
-
