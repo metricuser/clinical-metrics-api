@@ -153,48 +153,40 @@ document.getElementById("searchInput").oninput = e => { searchText = e.target.va
 
 
 function exportToCSV() {
-  fetch(api + "/entries")
-    .then(res => res.json())
-    .then(data => {
-      const filtered = data.filter(e =>
-        (!facilityFilter || e.facilityName === facilityFilter) &&
-        (!monthFilter || e.month === monthFilter) &&
-        (!searchText || JSON.stringify(e).toLowerCase().includes(searchText))
-      );
+  const filtered = filteredData(); // use the already filtered dataset
 
-      const csvRows = [["Facility", "Segment", "Month", "Year", "Census", "APW%", "SWL%", "Falls%", "Notes"]];
+  const headers = [
+    "facilityName", "segment", "month", "year", "census",
+    "apwPercent", "swlPercent", "fallsPercent", "notes"
+  ];
 
-      filtered.forEach(entry => {
-        const census = Number(entry.census) || 0;
-        const apw = Number(entry.apwResidents) || 0;
-        const swl = Number(entry.swlResidents) || 0;
-        const falls = Number(entry.fallsResidents) || 0;
-        const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
-        const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
-        const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
-        csvRows.push([
-          entry.facilityName || "",
-          entry.segment || "",
-          entry.month || "",
-          entry.year || "",
-          entry.census || "",
-          apwPct,
-          swlPct,
-          fallsPct,
-          (entry.notes || "").replace(/
+  const csvRows = [headers.join(",")];
+
+  filtered.forEach(row => {
+    const census = Number(row.census) || 0;
+    const apw = Number(row.apwResidents) || 0;
+    const swl = Number(row.swlResidents) || 0;
+    const falls = Number(row.fallsResidents) || 0;
+
+    const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
+    const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
+    const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
+
+    const rowData = [
+      row.facilityName || "", row.segment || "", row.month || "", row.year || "", row.census || "",
+      apwPct, swlPct, fallsPct, (row.notes || "").replace(/
 /g, " ").replace(/"/g, "'")
-        ]);
-      });
+    ];
 
-      const csvContent = csvRows.map(r => r.map(v => `"${v}"`).join(",")).join("
-");
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "clinical_metrics.csv";
-      link.click();
-    });
+    csvRows.push(rowData.map(v => `"${v}"`).join(","));
+  });
+
+  const blob = new Blob([csvRows.join("
+")], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "clinical_metrics.csv";
+  link.click();
 }
 
 
@@ -332,4 +324,3 @@ function loadAnnualAverages() {
 </script>
 </body>
 </html>
- 
