@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Clinical Metrics Export</title>
+  <title>Clinical Metrics Export (Updated)</title>
   <style>
     table {
       border-collapse: collapse;
@@ -22,7 +22,8 @@
   </style>
 </head>
 <body>
-  <h2>Clinical Metrics Entry</h2>
+  <!-- Force update marker v2 -->
+  <h2>Clinical Metrics Dashboard</h2>
   <label for="monthSelect">Month:</label>
   <select id="monthSelect" onchange="filterTable()">
     <option value="All">All</option>
@@ -66,14 +67,10 @@
       const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row =>
         row.style.display !== 'none'
       );
-      const header = Array.from(table.querySelectorAll('thead th')).map(function(th) {
-        return '"' + th.textContent + '"';
-      }).join(',');
-      const data = rows.map(function(row) {
-        return Array.from(row.cells).map(function(cell) {
-          return '"' + cell.textContent.trim() + '"';
-        }).join(',');
-      });
+      const header = Array.from(table.querySelectorAll('thead th')).map(th => `"${th.textContent}"`).join(',');
+      const data = rows.map(row =>
+        Array.from(row.cells).map(cell => `"${cell.textContent.trim()}"`).join(',')
+      );
       const csvContent = [header, ...data].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const link = document.createElement('a');
@@ -84,4 +81,3 @@
   </script>
 </body>
 </html>
- 
