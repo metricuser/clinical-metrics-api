@@ -1,1 +1,45 @@
-<!-- Placeholder: The HTML update with CSV export and calculated percentages will be inserted -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clinical Metrics Dashboard</title>
+  <script>
+    function exportToCSV() {
+      fetch("https://clinical-metrics-api.onrender.com/entries")
+        .then(res => res.json())
+        .then(data => {
+          const rows = [[
+            "Facility", "Segment", "Month", "Year", "Census",
+            "APW Residents", "SWL Residents", "Falls Residents",
+            "APW%", "SWL%", "Falls%", "Notes"
+          ]];
+          data.forEach(entry => {
+            const census = Number(entry.census) || 0;
+            const apw = Number(entry.apwResidents) || 0;
+            const swl = Number(entry.swlResidents) || 0;
+            const falls = Number(entry.fallsResidents) || 0;
+            const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
+            const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
+            const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
+            rows.push([
+              entry.facilityName || "", entry.segment || "", entry.month || "", entry.year || "", census,
+              apw, swl, falls, apwPct, swlPct, fallsPct, entry.notes || ""
+            ]);
+          });
+          const csv = rows.map(r => r.join(",")).join("\n");
+          const blob = new Blob([csv], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "clinical_metrics_with_percentages.csv";
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+    }
+  </script>
+</head>
+<body>
+  <h1>Clinical Metrics Dashboard (CSV Fixed)</h1>
+  <button onclick="exportToCSV()">Export to CSV</button>
+</body>
+</html>
