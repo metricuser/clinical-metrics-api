@@ -1,45 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Clinical Metrics Dashboard</title>
-  <script>
-    function exportToCSV() {
-      fetch("https://clinical-metrics-api.onrender.com/entries")
-        .then(res => res.json())
-        .then(data => {
-          const rows = [[
-            "Facility", "Segment", "Month", "Year", "Census",
-            "APW Residents", "SWL Residents", "Falls Residents",
-            "APW%", "SWL%", "Falls%", "Notes"
-          ]];
-          data.forEach(entry => {
-            const census = Number(entry.census) || 0;
-            const apw = Number(entry.apwResidents) || 0;
-            const swl = Number(entry.swlResidents) || 0;
-            const falls = Number(entry.fallsResidents) || 0;
-            const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
-            const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
-            const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
-            rows.push([
-              entry.facilityName || "", entry.segment || "", entry.month || "", entry.year || "", census,
-              apw, swl, falls, apwPct, swlPct, fallsPct, entry.notes || ""
-            ]);
-          });
-          const csv = rows.map(r => r.join(",")).join("\n");
-          const blob = new Blob([csv], { type: "text/csv" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "clinical_metrics_with_percentages.csv";
-          a.click();
-          URL.revokeObjectURL(url);
-        });
-    }
-  </script>
+  <style>
+    body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
+    h1, h2 { font-size: 24px; }
+    form, table { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+    input, select, button, textarea { padding: 6px; margin: 6px 0; width: 100%; max-width: 300px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    .actions button { margin-right: 5px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .red { color: red; font-weight: bold; }
+    .orange { color: orange; font-weight: bold; }
+    .green { color: green; font-weight: bold; }
+  </style>
 </head>
 <body>
-  <h1>Clinical Metrics Dashboard (CSV Fixed)</h1>
-  <button onclick="exportToCSV()">Export to CSV</button>
+<h1>Clinical Metrics Entry</h1>
+<form id="entryForm" class="grid">
+  <select name="facilityName" id="facility" required>
+    <option value="">Select Facility</option>
+    <option>Allis</option><option>Best Care</option><option>Bradford</option>
+    <option>Buchanan</option><option>Century Villa</option><option>Charlestown Place</option>
+    <option>Dover</option><option>Morning Breeze</option><option>Park View</option>
+    <option>Siena Woods</option><option>Smyrna</option>
+  </select>
+  <input name="segment" id="segment" placeholder="Segment" readonly />
+  <select name="month" required>
+    <option value="">Month</option>
+    <option>January</option><option>February</option><option>March</option><option>April</option>
+    <option>May</option><option>June</option><option>July</option><option>August</option>
+    <option>September</option><option>October</option><option>November</option><option>December</option>
+  </select>
+  <select name="year" required>
+    <option value="">Year</option>
+    <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
+    <option>2028</option><option>2029</option><option>2030</option>
+  </select>
+  <input name="apwResidents" placeholder="APW Residents" type="number" />
+  <input name="swlResidents" placeholder="SWL Residents" type="number" />
+  <input name="fallsResidents" placeholder="Falls Residents" type="number" />
+  <input name="census" placeholder="Census" type="number" />
+  <textarea name="notes" placeholder="Notes"></textarea>
+  <button type="submit">Submit</button>
+</form>
+
+<button onclick="exportToCSV()">Export CSV</button>
+
+<h2>Submitted Entries</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th>Census</th>
+      <th>APW%<br><span style="font-size:11px;color:#666;">(3%)</span></th>
+      <th>SWL%<br><span style="font-size:11px;color:#666;">(5%)</span></th>
+      <th>Falls%<br><span style="font-size:11px;color:#666;">(13%)</span></th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody id="entriesTable"></tbody>
+</table>
+
+<script>
+const api = "https://clinical-metrics-api.onrender.com";
+let entriesData = [];
+
+const facilitySegments = {
+  "Allis": "Midwest", "Best Care": "Southern Hospitality", "Bradford": "Northern Pride",
+  "Buchanan": "Southern Hospitality", "Century Villa": "Northern Pride",
+  "Charlestown Place": "Southern Hospitality", "Dover": "Southern Hospitality",
+  "Morning Breeze": "Northern Pride", "Park View": "Northern Pride",
+  "Siena Woods": "Northern Pride", "Smyrna": "Southern Hospitality"
+};
+
+document.getElementById("facility").addEventListener("change", e => {
+  document.getElementById("segment").value = facilitySegments[e.target.value] || "";
+});
+
+function formatPercent(n, d, threshold) {
+  if (!d || !n) return "—";
+  const pct = ((n / d) * 100).toFixed(1);
+  const cls = +pct > threshold ? 'red' : (+pct == threshold ? 'orange' : 'green');
+  return `<span class="${cls}">${pct}%</span>`;
+}
+
+async function loadEntries() {
+  const res = await fetch(api + "/entries");
+  entriesData = await res.json();
+  const table = document.getElementById("entriesTable");
+  table.innerHTML = "";
+  entriesData.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.facilityName}</td><td>${row.segment}</td><td>${row.month}</td><td>${row.year}</td><td>${row.census}</td>
+      <td>${formatPercent(row.apwResidents, row.census, 3)}</td>
+      <td>${formatPercent(row.swlResidents, row.census, 5)}</td>
+      <td>${formatPercent(row.fallsResidents, row.census, 13)}</td>
+      <td>${row.notes || ""}</td>`;
+    table.appendChild(tr);
+  });
+}
+
+function exportToCSV() {
+  fetch(api + "/entries")
+    .then(res => res.json())
+    .then(data => {
+      const rows = [[
+        "Facility", "Segment", "Month", "Year", "Census",
+        "APW Residents", "SWL Residents", "Falls Residents",
+        "APW%", "SWL%", "Falls%", "Notes"
+      ]];
+      data.forEach(entry => {
+        const census = Number(entry.census) || 0;
+        const apw = Number(entry.apwResidents) || 0;
+        const swl = Number(entry.swlResidents) || 0;
+        const falls = Number(entry.fallsResidents) || 0;
+        const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
+        const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
+        const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
+        rows.push([
+          entry.facilityName || "", entry.segment || "", entry.month || "", entry.year || "",
+          census, apw, swl, falls, apwPct, swlPct, fallsPct, entry.notes || ""
+        ]);
+      });
+      const csv = rows.map(r => r.join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "clinical_metrics_with_percentages.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+}
+
+document.getElementById("entryForm").onsubmit = async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const entry = {};
+  formData.forEach((v, k) => entry[k] = k === "notes" ? v : (isNaN(v) ? v : Number(v)));
+  await fetch(api + "/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry)
+  });
+  e.target.reset();
+  document.getElementById("segment").value = "";
+  loadEntries();
+};
+
+loadEntries();
+</script>
 </body>
 </html>
