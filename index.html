@@ -153,35 +153,34 @@ document.getElementById("searchInput").oninput = e => { searchText = e.target.va
 
 
 function exportToCSV() {
-  const filtered = filteredData(); // use the already filtered dataset
-
-  const headers = [
-    "facilityName", "segment", "month", "year", "census",
-    "apwPercent", "swlPercent", "fallsPercent", "notes"
-  ];
-
-  const csvRows = [headers.join(",")];
+  const filtered = filteredData();
+  const csvRows = [["Facility", "Segment", "Month", "Year", "Census", "APW%", "SWL%", "Falls%", "Notes"]];
 
   filtered.forEach(row => {
-    const census = Number(row.census) || 0;
-    const apw = Number(row.apwResidents) || 0;
-    const swl = Number(row.swlResidents) || 0;
-    const falls = Number(row.fallsResidents) || 0;
+    const census = parseFloat(row.census) || 0;
+    const apw = parseFloat(row.apwResidents) || 0;
+    const swl = parseFloat(row.swlResidents) || 0;
+    const falls = parseFloat(row.fallsResidents) || 0;
 
     const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
     const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
     const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
 
-    const rowData = [
-      row.facilityName || "", row.segment || "", row.month || "", row.year || "", row.census || "",
-      apwPct, swlPct, fallsPct, (row.notes || "").replace(/
+    csvRows.push([
+      row.facilityName,
+      row.segment,
+      row.month,
+      row.year,
+      row.census,
+      apwPct,
+      swlPct,
+      fallsPct,
+      (row.notes || "").replace(/
 /g, " ").replace(/"/g, "'")
-    ];
-
-    csvRows.push(rowData.map(v => `"${v}"`).join(","));
+    ]);
   });
 
-  const blob = new Blob([csvRows.join("
+  const blob = new Blob([csvRows.map(r => r.join(",")).join("
 ")], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
