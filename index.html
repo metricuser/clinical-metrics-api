@@ -3,25 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clinical Metrics Dashboard</title>
+  <title>Clinical Metrics Dashboard - Filtered CSV Export</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-    h2 { color: #333; }
     table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 10px; }
     th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
     th { background-color: #eee; }
-    select, button { margin-top: 10px; padding: 5px 10px; }
+    select, button { margin-right: 10px; padding: 5px 10px; }
   </style>
 </head>
 <body>
   <h2>Clinical Metrics Dashboard</h2>
+  <label for="facilityFilter">Facility:</label>
+  <select id="facilityFilter"><option value="All">All</option></select>
+
+  <label for="segmentFilter">Segment:</label>
+  <select id="segmentFilter"><option value="All">All</option></select>
+
   <label for="monthFilter">Month:</label>
   <select id="monthFilter">
     <option value="All">All</option>
-    <option value="January">January</option>
-    <option value="February">February</option>
-    <option value="March">March</option>
+    <option>January</option><option>February</option><option>March</option>
   </select>
+
   <button onclick="exportCSV()">Export CSV</button>
 
   <table>
@@ -44,19 +48,49 @@
       { facility: "Bradford", segment: "Northern Pride", month: "February", year: 2025, apw: 4, apwPct: "5.3%", swl: 13, swlPct: "17.1%", falls: 13, fallsPct: "17.1%", census: 76 }
     ];
 
-    function populateTable() {
-      const filter = document.getElementById("monthFilter").value;
+    function populateFilters() {
+      const facilitySet = new Set();
+      const segmentSet = new Set();
+      data.forEach(d => {
+        facilitySet.add(d.facility);
+        segmentSet.add(d.segment);
+      });
+
+      const facilityFilter = document.getElementById("facilityFilter");
+      const segmentFilter = document.getElementById("segmentFilter");
+
+      [...facilitySet].sort().forEach(fac => {
+        const opt = document.createElement("option");
+        opt.value = fac;
+        opt.textContent = fac;
+        facilityFilter.appendChild(opt);
+      });
+
+      [...segmentSet].sort().forEach(seg => {
+        const opt = document.createElement("option");
+        opt.value = seg;
+        opt.textContent = seg;
+        segmentFilter.appendChild(opt);
+      });
+    }
+
+    function applyFilters() {
+      const month = document.getElementById("monthFilter").value;
+      const facility = document.getElementById("facilityFilter").value;
+      const segment = document.getElementById("segmentFilter").value;
+
       const tbody = document.getElementById("tableBody");
       tbody.innerHTML = "";
 
-      const filtered = data.filter(d => filter === "All" || d.month === filter);
-      filtered.sort((a, b) => a.facility.localeCompare(b.facility));
+      const filtered = data.filter(d =>
+        (month === "All" || d.month === month) &&
+        (facility === "All" || d.facility === facility) &&
+        (segment === "All" || d.segment === segment)
+      ).sort((a, b) => a.facility.localeCompare(b.facility));
+
       filtered.forEach(d => {
         const row = `<tr>
-          <td>${d.facility}</td>
-          <td>${d.segment}</td>
-          <td>${d.month}</td>
-          <td>${d.year}</td>
+          <td>${d.facility}</td><td>${d.segment}</td><td>${d.month}</td><td>${d.year}</td>
           <td>${d.apw}</td><td>${d.apwPct}</td>
           <td>${d.swl}</td><td>${d.swlPct}</td>
           <td>${d.falls}</td><td>${d.fallsPct}</td>
@@ -64,13 +98,12 @@
         </tr>`;
         tbody.innerHTML += row;
       });
+
+      return filtered;
     }
 
     function exportCSV() {
-      const filter = document.getElementById("monthFilter").value;
-      const filtered = data.filter(d => filter === "All" || d.month === filter);
-      filtered.sort((a, b) => a.facility.localeCompare(b.facility));
-
+      const filtered = applyFilters();
       const headers = [
         "Facility", "Segment", "Month", "Year",
         "APW Residents", "APW%", "SWL Residents", "SWL%",
@@ -78,26 +111,27 @@
       ];
       const rows = filtered.map(d => [
         d.facility, d.segment, d.month, d.year,
-        d.apw, d.apwPct, d.swl, d.swlPct,
-        d.falls, d.fallsPct, d.census
+        d.apw, d.apwPct, d.swl, d.swlPct, d.falls, d.fallsPct, d.census
       ]);
 
-      const csvContent = [headers, ...rows]
-        .map(e => e.map(cell => `"${cell}"`).join(","))
-        .join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "clinical_metrics_filtered.csv";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "filtered_clinical_metrics.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
-    document.getElementById("monthFilter").addEventListener("change", populateTable);
-    window.onload = populateTable;
+    window.onload = () => {
+      populateFilters();
+      applyFilters();
+      document.getElementById("monthFilter").onchange = applyFilters;
+      document.getElementById("facilityFilter").onchange = applyFilters;
+      document.getElementById("segmentFilter").onchange = applyFilters;
+    };
   </script>
 </body>
 </html>
