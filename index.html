@@ -1,87 +1,86 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Clinical Metrics Dashboard</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; }
-        .red { color: red; }
-        .orange { color: orange; }
-        .green { color: green; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Clinical Metrics Export</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .export {
+      margin: 10px 0;
+    }
+  </style>
 </head>
 <body>
-    <h2>Clinical Metrics Entry</h2>
-    <div>
-        <label for="monthSelect">Month:</label>
-        <select id="monthSelect" onchange="filterTable()">
-            <option value="All">All</option>
-            <option value="January">January</option>
-            <option value="February">February</option>
-            <option value="March">March</option>
-        </select>
-        <button onclick="exportCSV()">Export CSV</button>
-    </div>
-    <table id="metricsTable">
-        <thead>
-            <tr>
-                <th>Facility</th>
-                <th>Segment</th>
-                <th>Month</th>
-                <th>Year</th>
-                <th>Census</th>
-                <th>APW%</th>
-                <th>SWL%</th>
-                <th>Falls%</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Allis</td><td>Midwest</td><td>March</td><td>2025</td><td>88</td>
-                <td class="red">10.2%</td><td>4.5%</td><td>8.0%</td>
-            </tr>
-            <tr>
-                <td>Best Care</td><td>Southern Hospitality</td><td>March</td><td>2025</td><td>77</td>
-                <td>1.3%</td><td class="red">6.6%</td><td class="red">16.9%</td>
-            </tr>
-            <tr>
-                <td>Bradford</td><td>Northern Pride</td><td>February</td><td>2025</td><td>76</td>
-                <td class="red">5.3%</td><td class="red">17.1%</td><td class="red">17.1%</td>
-            </tr>
-        </tbody>
-    </table>
+  <h2>Clinical Metrics Entry</h2>
+  <label for="monthSelect">Month:</label>
+  <select id="monthSelect" onchange="filterTable()">
+    <option value="All">All</option>
+    <option value="January">January</option>
+    <option value="February">February</option>
+    <option value="March">March</option>
+  </select>
+  <button class="export" onclick="exportFilteredCSV()">Export CSV</button>
+  <table id="metricsTable">
+    <thead>
+      <tr>
+        <th>Facility</th>
+        <th>Segment</th>
+        <th>Month</th>
+        <th>Year</th>
+        <th>Census</th>
+        <th>APW%</th>
+        <th>SWL%</th>
+        <th>Falls%</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Allis</td><td>Midwest</td><td>March</td><td>2025</td><td>88</td><td>10.2%</td><td>4.5%</td><td>8.0%</td></tr>
+      <tr><td>Best Care</td><td>Southern Hospitality</td><td>March</td><td>2025</td><td>77</td><td>1.3%</td><td>6.6%</td><td>16.9%</td></tr>
+      <tr><td>Bradford</td><td>Northern Pride</td><td>February</td><td>2025</td><td>76</td><td>5.3%</td><td>17.1%</td><td>17.1%</td></tr>
+    </tbody>
+  </table>
 
-    <script>
-        function filterTable() {
-            const selectedMonth = document.getElementById('monthSelect').value;
-            const rows = document.querySelectorAll('#metricsTable tbody tr');
-            rows.forEach(row => {
-                const month = row.cells[2].innerText;
-                row.style.display = (selectedMonth === "All" || month === selectedMonth) ? "" : "none";
-            });
-        }
+  <script>
+    function filterTable() {
+      const month = document.getElementById('monthSelect').value;
+      const rows = document.querySelectorAll('#metricsTable tbody tr');
+      rows.forEach(row => {
+        const cell = row.cells[2].textContent;
+        row.style.display = (month === 'All' || cell === month) ? '' : 'none';
+      });
+    }
 
-        function exportCSV() {
-            let csv = [];
-            const rows = document.querySelectorAll("#metricsTable tr");
-            rows.forEach(row => {
-                if (row.style.display === "none") return;  // Only export visible rows
-                const cols = row.querySelectorAll("th, td");
-                const rowData = Array.from(cols).map(col => col.innerText.trim()).join(",");
-                csv.push(rowData);
-            });
-            const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "clinical_metrics.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
+    function exportFilteredCSV() {
+      const table = document.getElementById('metricsTable');
+      const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row =>
+        row.style.display !== 'none'
+      );
+      const header = Array.from(table.querySelectorAll('thead th')).map(function(th) {
+        return '"' + th.textContent + '"';
+      }).join(',');
+      const data = rows.map(function(row) {
+        return Array.from(row.cells).map(function(cell) {
+          return '"' + cell.textContent.trim() + '"';
+        }).join(',');
+      });
+      const csvContent = [header, ...data].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'clinical_metrics_filtered.csv';
+      link.click();
+    }
+  </script>
 </body>
 </html>
