@@ -1,332 +1,133 @@
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Clinical Metrics Dashboard</title>
-<style>
-    body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
-    h1, h2 { font-size: 24px; }
-    form, table { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
-    input, select, button, textarea { padding: 6px; margin: 6px 0; width: 100%; max-width: 300px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
-    td.centered { text-align: center; }
-    .actions button { margin-right: 5px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-    .highlight { color: red; font-weight: bold; }
+  <meta charset="UTF-8" />
+  <title>Clinical Metrics Dashboard</title>
+  <style>
+    table, th, td {
+      border: 1px solid lightgray;
+      border-collapse: collapse;
+      padding: 8px;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .red { color: red; }
+    .orange { color: orange; }
+    .green { color: green; }
   </style>
 </head>
 <body>
-<h1>Clinical Metrics Entry</h1>
-<form class="grid" id="entryForm">
-<select name="facilityName" required="">
-<option value="">Select Facility</option>
-<option>Allis</option><option>Best Care</option><option>Bradford</option>
-<option>Buchanan</option><option>Century Villa</option><option>Charlestown Place</option>
-<option>Dover</option><option>Morning Breeze</option><option>Park View</option>
-<option>Siena Woods</option><option>Smyrna</option>
-</select>
-<input name="segment" placeholder="Segment" readonly=""/>
-<select name="month" required="">
-<option value="">Month</option>
-<option>January</option><option>February</option><option>March</option><option>April</option>
-<option>May</option><option>June</option><option>July</option><option>August</option>
-<option>September</option><option>October</option><option>November</option><option>December</option>
-</select>
-<select name="year" required="">
-<option value="">Year</option>
-<option>2024</option><option>2025</option><option>2026</option>
-<option>2027</option><option>2028</option><option>2029</option><option>2030</option>
-</select>
-<input name="apwResidents" placeholder="APW Residents" type="number"/>
-<input name="apwNew" placeholder="APW New this period" type="number"/>
-<input name="swlResidents" placeholder="SWL Residents" type="number"/>
-<input name="swlNew" placeholder="SWL New this period" type="number"/>
-<input name="swlUnavoidable" placeholder="SWL Unavoidable" type="number"/>
-<input name="fallsResidents" placeholder="Falls Residents" type="number"/>
-<input name="fallsTotal" placeholder="Total Falls" type="number"/>
-<input name="fallsInjury" placeholder="Falls with Injury" type="number"/>
-<input name="census" placeholder="Census" type="number"/>
-<textarea name="notes" placeholder="Notes"></textarea>
-<button type="submit">Submit</button>
-</form>
-<h2>Quarterly &amp; Annual Averages</h2>
-<div style="background:#fff;padding:20px;margin-bottom:20px;border-radius:8px;box-shadow:0 0 5px #ccc;">
-<label for="quarter">Quarter:</label>
-<label for="averageScope">Scope:</label>
-<select id="averageScope">
-<option value="corporate">Corporate</option>
-<option value="segment:Midwest">Segment - Midwest</option>
-<option value="segment:Southern Hospitality">Segment - Southern Hospitality</option>
-<option value="segment:Northern Pride">Segment - Northern Pride</option>
-<option value="facility:Allis">Facility - Allis</option>
-<option value="facility:Best Care">Facility - Best Care</option>
-<option value="facility:Bradford">Facility - Bradford</option>
-<option value="facility:Buchanan">Facility - Buchanan</option>
-<option value="facility:Century Villa">Facility - Century Villa</option>
-<option value="facility:Charlestown Place">Facility - Charlestown Place</option>
-<option value="facility:Dover">Facility - Dover</option>
-<option value="facility:Morning Breeze">Facility - Morning Breeze</option>
-<option value="facility:Park View">Facility - Park View</option>
-<option value="facility:Siena Woods">Facility - Siena Woods</option>
-<option value="facility:Smyrna">Facility - Smyrna</option>
-</select>
-<select id="quarter">
-<option value="">Select Quarter</option>
-<option value="Q1">Q1 (Jan–Mar)</option>
-<option value="Q2">Q2 (Apr–Jun)</option>
-<option value="Q3">Q3 (Jul–Sep)</option>
-<option value="Q4">Q4 (Oct–Dec)</option>
-</select>
-<select id="quarterYear"><option value="">Year</option><option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option></select>
-<button onclick="loadQuarterlyAverages()">Show Quarterly Averages</button>
-<br/><br/>
-<label for="annualYear">Annual Year:</label>
-<select id="annualYear"><option value="">Year</option><option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option></select>
-<button onclick="loadAnnualAverages()">Show Annual Averages</button>
-<div id="quarterlyResults" style="margin-top:20px;"></div>
-<div id="annualResults" style="margin-top:20px;"></div>
-</div>
-<h2>Submitted Entries</h2>
-<div style="margin-bottom:10px;">
-<input id="searchInput" placeholder="Search..." style="max-width:200px; margin-right:10px;"/>
-<button onclick="exportToCSV()" style="padding:6px 10px;">Export CSV</button><br/><br/>
-<select id="filterFacility">
-<option value="">All Facilities</option>
-<option>Allis</option><option>Best Care</option><option>Bradford</option>
-<option>Buchanan</option><option>Century Villa</option><option>Charlestown Place</option>
-<option>Dover</option><option>Morning Breeze</option><option>Park View</option>
-<option>Siena Woods</option><option>Smyrna</option>
-</select>
-<select id="filterMonth">
-<option value="">All Months</option>
-<option>January</option><option>February</option><option>March</option><option>April</option>
-<option>May</option><option>June</option><option>July</option><option>August</option>
-<option>September</option><option>October</option><option>November</option><option>December</option>
-</select>
-</div>
-<table id="dataTable"><thead><tr>
-<th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th style="text-align:center;">Census</th>
-<th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th>
-<th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th>
-<th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
-<th>Actions</th>
-</tr></thead><tbody></tbody></table>
-<script>
-const api = "https://clinical-metrics-api.onrender.com";
-const form = document.getElementById("entryForm");
-const tableBody = document.querySelector("#dataTable tbody");
-const facilitySegments = {
-  "Allis": "Midwest", "Best Care": "Southern Hospitality", "Bradford": "Northern Pride",
-  "Buchanan": "Southern Hospitality", "Century Villa": "Northern Pride",
-  "Charlestown Place": "Southern Hospitality", "Dover": "Southern Hospitality",
-  "Morning Breeze": "Northern Pride", "Park View": "Northern Pride",
-  "Siena Woods": "Northern Pride", "Smyrna": "Southern Hospitality"
-};
+  <h2>Clinical Metrics Entry</h2>
 
-form.facilityName.onchange = e => {
-  form.segment.value = facilitySegments[e.target.value] || "";
-};
+  <label for="month">Month:</label>
+  <select id="month">
+    <option value="All">All</option>
+  </select>
 
-form.onsubmit = async e => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(form).entries());
-  for (let key in data) {
-    if (!isNaN(data[key])) data[key] = Number(data[key]);
-  }
-  const res = await fetch(api + "/submit", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-  if (res.ok) { form.reset(); tableBody.innerHTML = ""; loadData(); }
-};
+  <button onclick="exportCSV()">Export CSV</button>
 
-let facilityFilter = "";
-let monthFilter = "";
-let searchText = "";
+  <br><br>
+  <table id="metricsTable">
+    <thead>
+      <tr>
+        <th>Facility</th>
+        <th>Segment</th>
+        <th>Month</th>
+        <th>Year</th>
+        <th>Census</th>
+        <th>APW%</th>
+        <th>SWL%</th>
+        <th>Falls%</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-document.getElementById("filterFacility").onchange = e => { facilityFilter = e.target.value; loadData(); };
-document.getElementById("filterMonth").onchange = e => { monthFilter = e.target.value; loadData(); };
-document.getElementById("searchInput").oninput = e => { searchText = e.target.value.toLowerCase(); loadData(); };
+  <script>
+    const data = [
+      { facility: "Allis", segment: "Midwest", month: "March", year: 2025, census: 88, apw: 9, swl: 4, falls: 7 },
+      { facility: "Best Care", segment: "Southern Hospitality", month: "March", year: 2025, census: 77, apw: 1, swl: 5, falls: 13 },
+      { facility: "Bradford", segment: "Northern Pride", month: "February", year: 2025, census: 76, apw: 4, swl: 13, falls: 12 },
+    ];
 
+    const monthDropdown = document.getElementById("month");
+    const tableBody = document.querySelector("#metricsTable tbody");
 
-function exportToCSV() {
-  fetch(api + "/entries")
-    .then(res => res.json())
-    .then(data => {
-      const filtered = data.filter(e =>
-        (!facilityFilter || e.facilityName === facilityFilter) &&
-        (!monthFilter || e.month === monthFilter) &&
-        (!searchText || JSON.stringify(e).toLowerCase().includes(searchText))
-      );
+    const thresholds = {
+      apw: 3,
+      swl: 5,
+      falls: 13
+    };
 
-      const headers = [
-        "facilityName", "segment", "month", "year", "census",
-        "apwPercent", "swlPercent", "fallsPercent"
-      ];
-
-      const csvRows = [headers.join(",")];
-      filtered.forEach(row => {
-        const census = Number(row.census) || 0;
-        const apw = Number(row.apwResidents) || 0;
-        const swl = Number(row.swlResidents) || 0;
-        const falls = Number(row.fallsResidents) || 0;
-
-        const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
-        const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
-        const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
-
-        const csvRow = [
-          row.facilityName, row.segment, row.month, row.year, census,
-          apwPct, swlPct, fallsPct
-        ].map(val => `"${val}"`).join(",");
-        csvRows.push(csvRow);
+    function loadMonths() {
+      const months = Array.from(new Set(data.map(d => d.month)));
+      months.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.text = m;
+        monthDropdown.add(opt);
       });
+    }
 
-      const blob = new Blob([csvRows.join("
-")], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
+    function colorize(value, type) {
+      const threshold = thresholds[type];
+      if (value >= threshold) return "red";
+      if (value >= threshold * 0.75) return "orange";
+      return "green";
+    }
+
+    function populateTable() {
+      tableBody.innerHTML = "";
+      const filterMonth = monthDropdown.value;
+      data.filter(row => filterMonth === "All" || row.month === filterMonth)
+        .forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.facility}</td>
+            <td>${row.segment}</td>
+            <td>${row.month}</td>
+            <td>${row.year}</td>
+            <td>${row.census}</td>
+            <td class="${colorize(row.apw, 'apw')}">${row.apw.toFixed(1)}%</td>
+            <td class="${colorize(row.swl, 'swl')}">${row.swl.toFixed(1)}%</td>
+            <td class="${colorize(row.falls, 'falls')}">${row.falls.toFixed(1)}%</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+    }
+
+    function exportCSV() {
+      const rows = [["Facility", "Segment", "Month", "Year", "Census", "APW%", "SWL%", "Falls%"]];
+      const filterMonth = monthDropdown.value;
+
+      data.filter(row => filterMonth === "All" || row.month === filterMonth)
+        .forEach(row => {
+          rows.push([
+            row.facility,
+            row.segment,
+            row.month,
+            row.year,
+            row.census,
+            row.apw.toFixed(1) + "%",
+            row.swl.toFixed(1) + "%",
+            row.falls.toFixed(1) + "%"
+          ]);
+        });
+
+      const csvContent = rows.map(e => e.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
       const link = document.createElement("a");
-      link.href = url;
+      link.href = URL.createObjectURL(blob);
       link.download = "clinical_metrics.csv";
       link.click();
-    });
-}
+    }
 
+    monthDropdown.addEventListener("change", populateTable);
 
-function highlight(val, threshold) {
-  return parseFloat(val) >= threshold ? 'highlight' : '';
-}
-
-async function loadData() {
-  const res = await fetch(api + "/entries");
-  const entries = await res.json();
-  tableBody.innerHTML = "";
-  entries
-    .filter(e => !facilityFilter || e.facilityName === facilityFilter)
-    .filter(e => !monthFilter || e.month === monthFilter)
-    .filter(e => !searchText || JSON.stringify(e).toLowerCase().includes(searchText))
-    .sort((a, b) => a.facilityName.localeCompare(b.facilityName))
-    .forEach(entry => {
-      const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-      const swlPct = entry.census ? ((entry.swlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-      const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${entry.facilityName}</td>
-        <td>${entry.segment}</td>
-        <td>${entry.month}</td>
-        <td>${entry.year}</td>
-        <td class="centered">${entry.census || ""}</td>
-        <td class="${highlight(apwPct, 3)}">${apwPct}%</td>
-        <td class="${highlight(swlPct, 5)}">${swlPct}%</td>
-        <td class="${highlight(fallPct, 13)}">${fallPct}%</td>
-        <td class="actions">
-          <button onclick="editEntry('${entry._id}')">Edit</button>
-          <button onclick="deleteEntry('${entry._id}')">Delete</button>
-        </td>`;
-      tableBody.appendChild(row);
-    });
-}
-
-async function deleteEntry(id) {
-  await fetch(api + "/entries/" + id, { method: "DELETE" });
-  loadData();
-}
-
-async function editEntry(id) {
-  const res = await fetch(api + "/entries");
-  const entries = await res.json();
-  const entry = entries.find(e => e._id === id);
-  if (!entry) return;
-  Object.keys(entry).forEach(key => {
-    const field = form.querySelector(`[name="${key}"]`);
-    if (field) field.value = entry[key];
-  });
-  await deleteEntry(id);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-loadData();
-</script>
-
-
-<script>
-const quarterMonths = {
-  Q1: ["January", "February", "March"],
-  Q2: ["April", "May", "June"],
-  Q3: ["July", "August", "September"],
-  Q4: ["October", "November", "December"]
-};
-
-function getScopeFilter(entry, scopeValue) {
-  if (scopeValue === "corporate") return true;
-  if (scopeValue.startsWith("segment:")) return entry.segment === scopeValue.split(":")[1];
-  if (scopeValue.startsWith("facility:")) return entry.facilityName === scopeValue.split(":")[1];
-  return false;
-}
-
-function calculateAverages(data) {
-  let totalAPW = 0, totalSWL = 0, totalFalls = 0, totalCensus = 0;
-  data.forEach(entry => {
-    totalAPW += Number(entry.apwResidents || 0);
-    totalSWL += Number(entry.swlResidents || 0);
-    totalFalls += Number(entry.fallsResidents || 0);
-    totalCensus += Number(entry.census || 0);
-  });
-  const getPct = (val) => totalCensus ? ((val / totalCensus) * 100).toFixed(1) + "%" : "0.0%";
-  return `
-    <table style="width:100%;margin-bottom:20px;border-collapse:collapse;">
-      <tr><th style="text-align:left;">APW%</th><th>SWL%</th><th>Falls%</th></tr>
-      <tr>
-        <td>${getPct(totalAPW)}</td>
-        <td>${getPct(totalSWL)}</td>
-        <td>${getPct(totalFalls)}</td>
-      </tr>
-    </table>
-  `;
-}
-
-function loadQuarterlyAverages() {
-  const year = document.getElementById("quarterYear").value;
-  const quarter = document.getElementById("quarter").value;
-  const scope = document.getElementById("averageScope").value;
-  const months = quarterMonths[quarter];
-  if (!year || !quarter) return alert("Select both quarter and year.");
-
-  fetch("https://clinical-metrics-api.onrender.com/entries")
-    .then(res => res.json())
-    .then(data => {
-      const filtered = data.filter(e =>
-        e.year === year &&
-        months.includes(e.month) &&
-        getScopeFilter(e, scope)
-      );
-      document.getElementById("quarterlyResults").innerHTML =
-        `<h3>Quarterly Averages (${quarter} ${year}) - ${scope.replace(":", " - ")}</h3>` +
-        calculateAverages(filtered);
-    });
-}
-
-function loadAnnualAverages() {
-  const year = document.getElementById("annualYear").value;
-  const scope = document.getElementById("averageScope").value;
-  if (!year) return alert("Select a year.");
-
-  fetch("https://clinical-metrics-api.onrender.com/entries")
-    .then(res => res.json())
-    .then(data => {
-      const filtered = data.filter(e =>
-        e.year === year &&
-        getScopeFilter(e, scope)
-      );
-      document.getElementById("annualResults").innerHTML =
-        `<h3>Annual Averages (${year}) - ${scope.replace(":", " - ")}</h3>` +
-        calculateAverages(filtered);
-    });
-}
-</script>
+    loadMonths();
+    populateTable();
+  </script>
 </body>
 </html>
