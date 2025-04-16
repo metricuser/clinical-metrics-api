@@ -1,10 +1,76 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clinical Metrics Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background-color: #eee; }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
-  <h1>Regenerating a working index.html in progress...</h1>
+  <h2>Clinical Metrics Dashboard</h2>
+
+  <label for="monthFilter">Month:</label>
+  <select id="monthFilter" onchange="filterTable()">
+    <option value="All">All</option>
+    <option value="January">January</option>
+    <option value="February">February</option>
+    <option value="March">March</option>
+  </select>
+  <button onclick="exportFilteredCSV()">Export CSV</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Facility</th>
+        <th>Segment</th>
+        <th>Month</th>
+        <th>Year</th>
+        <th>Census</th>
+        <th>APW%</th>
+        <th>SWL%</th>
+        <th>Falls%</th>
+      </tr>
+    </thead>
+    <tbody id="entryTableBody">
+      <tr><td>Allis</td><td>Midwest</td><td>March</td><td>2025</td><td>88</td><td>10.2%</td><td>4.5%</td><td>8.0%</td></tr>
+      <tr><td>Best Care</td><td>Southern Hospitality</td><td>March</td><td>2025</td><td>77</td><td>1.3%</td><td>6.6%</td><td>16.9%</td></tr>
+      <tr><td>Bradford</td><td>Northern Pride</td><td>February</td><td>2025</td><td>76</td><td>5.3%</td><td>17.1%</td><td>17.1%</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    function filterTable() {
+      const selectedMonth = document.getElementById("monthFilter").value;
+      const rows = document.querySelectorAll("#entryTableBody tr");
+      rows.forEach(row => {
+        const month = row.cells[2].textContent;
+        row.classList.toggle("hidden", selectedMonth !== "All" && month !== selectedMonth);
+      });
+    }
+
+    function exportFilteredCSV() {
+      const rows = document.querySelectorAll("#entryTableBody tr:not(.hidden)");
+      let csv = "Facility,Segment,Month,Year,Census,APW%,SWL%,Falls%\n";
+      rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        const data = Array.from(cells).map(td => `"${td.innerText}"`).join(",");
+        csv += data + "\n";
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "clinical_metrics_filtered.csv";
+      link.click();
+    }
+  </script>
 </body>
 </html>
