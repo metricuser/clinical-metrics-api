@@ -153,39 +153,23 @@ document.getElementById("searchInput").oninput = e => { searchText = e.target.va
 
 
 function exportToCSV() {
-  const filtered = typeof filteredData === "function" ? filteredData() : (Array.isArray(data) ? data : []);
-  const csvRows = [["Facility", "Segment", "Month", "Year", "Census", "APW%", "SWL%", "Falls%", "Notes"]];
+  const rows = Array.from(document.querySelectorAll("#dataTable tbody tr"));
+  if (rows.length === 0) return alert("No data to export.");
 
-  filtered.forEach(row => {
-    const census = parseFloat(row.census) || 0;
-    const apw = parseFloat(row.apwResidents) || 0;
-    const swl = parseFloat(row.swlResidents) || 0;
-    const falls = parseFloat(row.fallsResidents) || 0;
+  const headers = ["Facility", "Segment", "Month", "Year", "Census", "APW%", "SWL%", "Falls%"];
+  const csvRows = [headers.join(",")];
 
-    const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
-    const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
-    const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
-
-    csvRows.push([
-      row.facilityName || "",
-      row.segment || "",
-      row.month || "",
-      row.year || "",
-      row.census || "",
-      apwPct,
-      swlPct,
-      fallsPct,
-      (row.notes || "").replace(/
-/g, " ").replace(/"/g, "'")
-    ]);
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const values = Array.from(cells).slice(0, 8).map(cell => `"${cell.textContent.trim()}"`);
+    csvRows.push(values.join(","));
   });
 
-  const csvContent = csvRows.map(r => r.join(",")).join("
-");
-  const blob = new Blob([csvContent], { type: "text/csv" });
+  const blob = new Blob([csvRows.join("
+")], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "clinical_metrics.csv";
+  link.download = "clinical_metrics_filtered.csv";
   link.click();
 }
 
@@ -324,4 +308,3 @@ function loadAnnualAverages() {
 </script>
 </body>
 </html>
- 
