@@ -151,15 +151,42 @@ document.getElementById("filterFacility").onchange = e => { facilityFilter = e.t
 document.getElementById("filterMonth").onchange = e => { monthFilter = e.target.value; loadData(); };
 document.getElementById("searchInput").oninput = e => { searchText = e.target.value.toLowerCase(); loadData(); };
 
+
 function exportToCSV() {
   fetch(api + "/entries")
     .then(res => res.json())
     .then(data => {
-      const headers = Object.keys(data[0] || {});
-      const csvRows = [
-        headers.join(","), ...data.map(row => headers.map(field => `"${row[field] || ""}"`).join(","))
+      const filtered = data.filter(e =>
+        (!facilityFilter || e.facilityName === facilityFilter) &&
+        (!monthFilter || e.month === monthFilter) &&
+        (!searchText || JSON.stringify(e).toLowerCase().includes(searchText))
+      );
+
+      const headers = [
+        "facilityName", "segment", "month", "year", "census",
+        "apwPercent", "swlPercent", "fallsPercent"
       ];
-      const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+
+      const csvRows = [headers.join(",")];
+      filtered.forEach(row => {
+        const census = Number(row.census) || 0;
+        const apw = Number(row.apwResidents) || 0;
+        const swl = Number(row.swlResidents) || 0;
+        const falls = Number(row.fallsResidents) || 0;
+
+        const apwPct = census ? ((apw / census) * 100).toFixed(1) + "%" : "0.0%";
+        const swlPct = census ? ((swl / census) * 100).toFixed(1) + "%" : "0.0%";
+        const fallsPct = census ? ((falls / census) * 100).toFixed(1) + "%" : "0.0%";
+
+        const csvRow = [
+          row.facilityName, row.segment, row.month, row.year, census,
+          apwPct, swlPct, fallsPct
+        ].map(val => `"${val}"`).join(",");
+        csvRows.push(csvRow);
+      });
+
+      const blob = new Blob([csvRows.join("
+")], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -167,6 +194,7 @@ function exportToCSV() {
       link.click();
     });
 }
+
 
 function highlight(val, threshold) {
   return parseFloat(val) >= threshold ? 'highlight' : '';
