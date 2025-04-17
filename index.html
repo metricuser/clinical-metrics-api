@@ -6,6 +6,7 @@
 <meta charset="utf-8"/>
 <title>Clinical Metrics Dashboard</title>
 <style>
+th.centered, td.centered { text-align: center; vertical-align: middle; }
     body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
     h1, h2 { font-size: 24px; }
     form, table { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
@@ -109,6 +110,9 @@
 </div>
 <table id="dataTable"><thead><tr>
 <th>Facility</th><th>Segment</th><th>Month</th><th>Year</th><th style="text-align:center;">Census</th>
+<th class="centered">APW Residents</th>
+<th class="centered">SWL Residents</th>
+<th class="centered">Falls Residents</th>
 <th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th>
 <th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th>
 <th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
@@ -151,22 +155,50 @@ document.getElementById("filterFacility").onchange = e => { facilityFilter = e.t
 document.getElementById("filterMonth").onchange = e => { monthFilter = e.target.value; loadData(); };
 document.getElementById("searchInput").oninput = e => { searchText = e.target.value.toLowerCase(); loadData(); };
 
+
 function exportToCSV() {
-  fetch(api + "/entries")
-    .then(res => res.json())
-    .then(data => {
-      const headers = Object.keys(data[0] || {});
-      const csvRows = [
-        headers.join(","), ...data.map(row => headers.map(field => `"${row[field] || ""}"`).join(","))
-      ];
-      const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "clinical_metrics.csv";
-      link.click();
-    });
+  const desiredKeywords = [
+    "Facility", "Segment", "Month", "Year", "Census",
+    "APW Residents", "SWL Residents", "Falls Residents",
+    "APW%", "SWL%", "Falls%"
+  ];
+
+  const table = document.querySelector("#dataTable");
+  const headerCells = table.querySelectorAll("thead th");
+  const headerIndexes = [];
+  const headerNames = [];
+
+  headerCells.forEach((th, i) => {
+    const clean = th.textContent.trim().replace(/\s+/g, " ");
+    for (const keyword of desiredKeywords) {
+      if (clean.includes(keyword)) {
+        headerIndexes.push(i);
+        headerNames.push(keyword);
+        break;
+      }
+    }
+  });
+
+  const rows = [headerNames];
+  const dataRows = table.querySelectorAll("tbody tr");
+
+  dataRows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const rowData = headerIndexes.map(i => cells[i]?.textContent.trim() || "");
+    rows.push(rowData);
+  });
+
+  const csvContent = rows.map(r => r.join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "clinical_metrics.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
+
 
 function highlight(val, threshold) {
   return parseFloat(val) >= threshold ? 'highlight' : '';
@@ -191,7 +223,7 @@ async function loadData() {
         <td>${entry.segment}</td>
         <td>${entry.month}</td>
         <td>${entry.year}</td>
-        <td class="centered">${entry.census || ""}</td>
+        <td class="centered">${entry.census || ""}</td><td class="centered">${entry.apwResidents || ""}</td><td class="centered">${entry.swlResidents || ""}</td><td class="centered">${entry.fallsResidents || ""}</td>
         <td class="${highlight(apwPct, 3)}">${apwPct}%</td>
         <td class="${highlight(swlPct, 5)}">${swlPct}%</td>
         <td class="${highlight(fallPct, 13)}">${fallPct}%</td>
@@ -222,45 +254,6 @@ async function editEntry(id) {
 }
 
 loadData();
-
-function exportToCSV() {
-  const filtered = filteredData();
-
-  const csvRows = [];
-  const headers = [
-    "Facility", "Segment", "Month", "Year",
-    "APW Residents", "APW%", "SWL Residents", "SWL%",
-    "Falls Residents", "Falls%", "Census", "Notes"
-  ];
-  csvRows.push(headers.join(","));
-
-  filtered.forEach(row => {
-    const census = parseFloat(row.census) || 0;
-    const apw = parseFloat(row.apwResidents) || 0;
-    const swl = parseFloat(row.swlResidents) || 0;
-    const falls = parseFloat(row.fallsResidents) || 0;
-
-    const apwPct = census ? (apw / census * 100).toFixed(1) + "%" : "0.0%";
-    const swlPct = census ? (swl / census * 100).toFixed(1) + "%" : "0.0%";
-    const fallsPct = census ? (falls / census * 100).toFixed(1) + "%" : "0.0%";
-
-    const rowData = [
-      row.facilityName, row.segment, row.month, row.year,
-      apw, apwPct, swl, swlPct, falls, fallsPct,
-      row.census,
-      (row.notes || "").replace(/\n/g, " ")
-    ];
-    csvRows.push(rowData.map(cell => `"${cell}"`).join(","));
-  });
-
-  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "filtered_clinical_metrics.csv";
-  a.click();
-}
-
 </script>
 
 
@@ -338,45 +331,6 @@ function loadAnnualAverages() {
         calculateAverages(filtered);
     });
 }
-
-function exportToCSV() {
-  const filtered = filteredData();
-
-  const csvRows = [];
-  const headers = [
-    "Facility", "Segment", "Month", "Year",
-    "APW Residents", "APW%", "SWL Residents", "SWL%",
-    "Falls Residents", "Falls%", "Census", "Notes"
-  ];
-  csvRows.push(headers.join(","));
-
-  filtered.forEach(row => {
-    const census = parseFloat(row.census) || 0;
-    const apw = parseFloat(row.apwResidents) || 0;
-    const swl = parseFloat(row.swlResidents) || 0;
-    const falls = parseFloat(row.fallsResidents) || 0;
-
-    const apwPct = census ? (apw / census * 100).toFixed(1) + "%" : "0.0%";
-    const swlPct = census ? (swl / census * 100).toFixed(1) + "%" : "0.0%";
-    const fallsPct = census ? (falls / census * 100).toFixed(1) + "%" : "0.0%";
-
-    const rowData = [
-      row.facilityName, row.segment, row.month, row.year,
-      apw, apwPct, swl, swlPct, falls, fallsPct,
-      row.census,
-      (row.notes || "").replace(/\n/g, " ")
-    ];
-    csvRows.push(rowData.map(cell => `"${cell}"`).join(","));
-  });
-
-  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "filtered_clinical_metrics.csv";
-  a.click();
-}
-
 </script>
 </body>
 </html>
