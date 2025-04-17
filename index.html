@@ -151,47 +151,11 @@ document.getElementById("filterFacility").onchange = e => { facilityFilter = e.t
 document.getElementById("filterMonth").onchange = e => { monthFilter = e.target.value; loadData(); };
 document.getElementById("searchInput").oninput = e => { searchText = e.target.value.toLowerCase(); loadData(); };
 
-
 function exportToCSV() {
-  const filtered = filteredData();
-
-  const csvRows = [];
-  const headers = [
-    "Facility", "Segment", "Month", "Year",
-    "APW Residents", "APW%", "SWL Residents", "SWL%",
-    "Falls Residents", "Falls%", "Census", "Notes"
-  ];
-  csvRows.push(headers.join(","));
-
-  filtered.forEach(row => {
-    const census = parseFloat(row.census) || 0;
-    const apw = parseFloat(row.apwResidents) || 0;
-    const swl = parseFloat(row.swlResidents) || 0;
-    const falls = parseFloat(row.fallsResidents) || 0;
-
-    const apwPct = census ? (apw / census * 100).toFixed(1) + "%" : "0.0%";
-    const swlPct = census ? (swl / census * 100).toFixed(1) + "%" : "0.0%";
-    const fallsPct = census ? (falls / census * 100).toFixed(1) + "%" : "0.0%";
-
-    const rowData = [
-      row.facilityName, row.segment, row.month, row.year,
-      apw, apwPct, swl, swlPct, falls, fallsPct,
-      row.census,
-      (row.notes || "").replace(/
-/g, " ")
-    ];
-    csvRows.push(rowData.map(cell => `"${cell}"`).join(","));
-  });
-
-  const blob = new Blob([csvRows.join("
-")], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "filtered_clinical_metrics.csv";
-  a.click();
-}
-);
+  fetch(api + "/entries")
+    .then(res => res.json())
+    .then(data => {
+      const headers = Object.keys(data[0] || {});
       const csvRows = [
         headers.join(","), ...data.map(row => headers.map(field => `"${row[field] || ""}"`).join(","))
       ];
@@ -258,6 +222,45 @@ async function editEntry(id) {
 }
 
 loadData();
+
+function exportToCSV() {
+  const filtered = filteredData();
+
+  const csvRows = [];
+  const headers = [
+    "Facility", "Segment", "Month", "Year",
+    "APW Residents", "APW%", "SWL Residents", "SWL%",
+    "Falls Residents", "Falls%", "Census", "Notes"
+  ];
+  csvRows.push(headers.join(","));
+
+  filtered.forEach(row => {
+    const census = parseFloat(row.census) || 0;
+    const apw = parseFloat(row.apwResidents) || 0;
+    const swl = parseFloat(row.swlResidents) || 0;
+    const falls = parseFloat(row.fallsResidents) || 0;
+
+    const apwPct = census ? (apw / census * 100).toFixed(1) + "%" : "0.0%";
+    const swlPct = census ? (swl / census * 100).toFixed(1) + "%" : "0.0%";
+    const fallsPct = census ? (falls / census * 100).toFixed(1) + "%" : "0.0%";
+
+    const rowData = [
+      row.facilityName, row.segment, row.month, row.year,
+      apw, apwPct, swl, swlPct, falls, fallsPct,
+      row.census,
+      (row.notes || "").replace(/\n/g, " ")
+    ];
+    csvRows.push(rowData.map(cell => `"${cell}"`).join(","));
+  });
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "filtered_clinical_metrics.csv";
+  a.click();
+}
+
 </script>
 
 
@@ -335,6 +338,45 @@ function loadAnnualAverages() {
         calculateAverages(filtered);
     });
 }
+
+function exportToCSV() {
+  const filtered = filteredData();
+
+  const csvRows = [];
+  const headers = [
+    "Facility", "Segment", "Month", "Year",
+    "APW Residents", "APW%", "SWL Residents", "SWL%",
+    "Falls Residents", "Falls%", "Census", "Notes"
+  ];
+  csvRows.push(headers.join(","));
+
+  filtered.forEach(row => {
+    const census = parseFloat(row.census) || 0;
+    const apw = parseFloat(row.apwResidents) || 0;
+    const swl = parseFloat(row.swlResidents) || 0;
+    const falls = parseFloat(row.fallsResidents) || 0;
+
+    const apwPct = census ? (apw / census * 100).toFixed(1) + "%" : "0.0%";
+    const swlPct = census ? (swl / census * 100).toFixed(1) + "%" : "0.0%";
+    const fallsPct = census ? (falls / census * 100).toFixed(1) + "%" : "0.0%";
+
+    const rowData = [
+      row.facilityName, row.segment, row.month, row.year,
+      apw, apwPct, swl, swlPct, falls, fallsPct,
+      row.census,
+      (row.notes || "").replace(/\n/g, " ")
+    ];
+    csvRows.push(rowData.map(cell => `"${cell}"`).join(","));
+  });
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "filtered_clinical_metrics.csv";
+  a.click();
+}
+
 </script>
 </body>
 </html>
