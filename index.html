@@ -114,6 +114,11 @@
 <th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
 <th>Actions</th>
 </tr></thead><tbody></tbody></table>
+<div class="summary-section" style="margin-top:30px;padding:15px;background:#fff;border:1px solid #ccc;border-radius:6px;">
+  <h3>Quarterly & Annual Averages (Census-Weighted)</h3>
+  <pre id="summaryOutput">Calculating...</pre>
+</div>
+
 <script>
 const api = "https://clinical-metrics-api.onrender.com";
 const form = document.getElementById("entryForm");
@@ -222,6 +227,53 @@ async function editEntry(id) {
 }
 
 loadData();
+
+function generateSummaries(entries) {
+  const quarters = {}, years = {};
+  const monthToQuarter = {
+    January: "Q1", February: "Q1", March: "Q1",
+    April: "Q2", May: "Q2", June: "Q2",
+    July: "Q3", August: "Q3", September: "Q3",
+    October: "Q4", November: "Q4", December: "Q4"
+  };
+
+  const addTo = (obj, key, census, apw, swl, falls) => {
+    if (!obj[key]) obj[key] = { census: 0, apw: 0, swl: 0, falls: 0 };
+    obj[key].census += census;
+    obj[key].apw += apw;
+    obj[key].swl += swl;
+    obj[key].falls += falls;
+  };
+
+  entries.forEach(d => {
+    const q = monthToQuarter[d.month] || "Unknown";
+    const y = d.year;
+    const c = parseFloat(d.census) || 0;
+    const a = parseFloat(d.apwResidents) || 0;
+    const s = parseFloat(d.swlResidents) || 0;
+    const f = parseFloat(d.fallsResidents) || 0;
+    addTo(quarters, q, c, a, s, f);
+    addTo(years, y, c, a, s, f);
+  });
+
+  let output = "QUARTERLY AVERAGES:\n";
+  for (const q in quarters) {
+    const { census, apw, swl, falls } = quarters[q];
+    const pct = v => census ? (v / census * 100).toFixed(1) + "%" : "0.0%";
+    output += ` - ${q}: APW ${pct(apw)}, SWL ${pct(swl)}, Falls ${pct(falls)}\n`;
+  }
+
+  output += "\nANNUAL AVERAGES:\n";
+  for (const y in years) {
+    const { census, apw, swl, falls } = years[y];
+    const pct = v => census ? (v / census * 100).toFixed(1) + "%" : "0.0%";
+    output += ` - ${y}: APW ${pct(apw)}, SWL ${pct(swl)}, Falls ${pct(falls)}\n`;
+  }
+
+  const out = document.getElementById("summaryOutput");
+  if (out) out.textContent = output;
+}
+
 </script>
 
 
@@ -258,6 +310,11 @@ function calculateAverages(data) {
         <td>${getPct(totalFalls)}</td>
       </tr>
     </table>
+<div class="summary-section" style="margin-top:30px;padding:15px;background:#fff;border:1px solid #ccc;border-radius:6px;">
+  <h3>Quarterly & Annual Averages (Census-Weighted)</h3>
+  <pre id="summaryOutput">Calculating...</pre>
+</div>
+
   `;
 }
 
@@ -299,6 +356,53 @@ function loadAnnualAverages() {
         calculateAverages(filtered);
     });
 }
+
+function generateSummaries(entries) {
+  const quarters = {}, years = {};
+  const monthToQuarter = {
+    January: "Q1", February: "Q1", March: "Q1",
+    April: "Q2", May: "Q2", June: "Q2",
+    July: "Q3", August: "Q3", September: "Q3",
+    October: "Q4", November: "Q4", December: "Q4"
+  };
+
+  const addTo = (obj, key, census, apw, swl, falls) => {
+    if (!obj[key]) obj[key] = { census: 0, apw: 0, swl: 0, falls: 0 };
+    obj[key].census += census;
+    obj[key].apw += apw;
+    obj[key].swl += swl;
+    obj[key].falls += falls;
+  };
+
+  entries.forEach(d => {
+    const q = monthToQuarter[d.month] || "Unknown";
+    const y = d.year;
+    const c = parseFloat(d.census) || 0;
+    const a = parseFloat(d.apwResidents) || 0;
+    const s = parseFloat(d.swlResidents) || 0;
+    const f = parseFloat(d.fallsResidents) || 0;
+    addTo(quarters, q, c, a, s, f);
+    addTo(years, y, c, a, s, f);
+  });
+
+  let output = "QUARTERLY AVERAGES:\n";
+  for (const q in quarters) {
+    const { census, apw, swl, falls } = quarters[q];
+    const pct = v => census ? (v / census * 100).toFixed(1) + "%" : "0.0%";
+    output += ` - ${q}: APW ${pct(apw)}, SWL ${pct(swl)}, Falls ${pct(falls)}\n`;
+  }
+
+  output += "\nANNUAL AVERAGES:\n";
+  for (const y in years) {
+    const { census, apw, swl, falls } = years[y];
+    const pct = v => census ? (v / census * 100).toFixed(1) + "%" : "0.0%";
+    output += ` - ${y}: APW ${pct(apw)}, SWL ${pct(swl)}, Falls ${pct(falls)}\n`;
+  }
+
+  const out = document.getElementById("summaryOutput");
+  if (out) out.textContent = output;
+}
+
 </script>
 </body>
 </html>
