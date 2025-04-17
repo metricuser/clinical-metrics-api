@@ -153,7 +153,7 @@ document.getElementById("searchInput").oninput = e => { searchText = e.target.va
 
 
 function exportToCSV() {
-  const filtered = filteredData(); // filteredData is used by the dashboard to display data
+  const filtered = filteredData();
 
   const csvRows = [];
   const headers = [
@@ -175,23 +175,21 @@ function exportToCSV() {
 
     const rowData = [
       row.facilityName, row.segment, row.month, row.year,
-      apw, apwPct,
-      swl, swlPct,
-      falls, fallsPct,
+      apw, apwPct, swl, swlPct, falls, fallsPct,
       row.census,
-      row.notes?.replace(/\n/g, " ") || ""
+      (row.notes || "").replace(/
+/g, " ")
     ];
     csvRows.push(rowData.map(cell => `"${cell}"`).join(","));
   });
 
-  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const blob = new Blob([csvRows.join("
+")], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "filtered_clinical_metrics.csv";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "filtered_clinical_metrics.csv";
+  a.click();
 }
 );
       const csvRows = [
