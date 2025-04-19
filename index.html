@@ -113,6 +113,7 @@ th.centered, td.centered { text-align: center; vertical-align: middle; }
 <th class="centered">APW Residents</th>
 <th class="centered">SWL Residents</th>
 <th class="centered">Falls Residents</th>
+<th class="centered">Falls with Injury</th>
 <th>APW%<br/><span style="font-size:11px;color:#666;">(3%)</span></th>
 <th>SWL%<br/><span style="font-size:11px;color:#666;">(5%)</span></th>
 <th>Falls%<br/><span style="font-size:11px;color:#666;">(13%)</span></th>
@@ -160,7 +161,7 @@ function exportToCSV() {
   const desiredKeywords = [
     "Facility", "Segment", "Month", "Year", "Census",
     "APW Residents", "SWL Residents", "Falls Residents",
-    "APW%", "SWL%", "Falls%"
+    "APW%", "SWL%", "Falls%", "Falls with Injury"
   ];
 
   const table = document.querySelector("#dataTable");
@@ -223,7 +224,8 @@ async function loadData() {
         <td>${entry.segment}</td>
         <td>${entry.month}</td>
         <td>${entry.year}</td>
-        <td class="centered">${entry.census || ""}</td><td class="centered">${entry.apwResidents || ""}</td><td class="centered">${entry.swlResidents || ""}</td><td class="centered">${entry.fallsResidents || ""}</td>
+        <td class="centered">${entry.census ?? 0}</td><td class="centered">${entry.apwResidents ?? 0}</td><td class="centered">${entry.swlResidents ?? 0}</td><td class="centered">${entry.fallsResidents ?? 0}</td>
+<td class="centered">${entry.fallsInjury ?? 0}</td>
         <td class="${highlight(apwPct, 3)}">${apwPct}%</td>
         <td class="${highlight(swlPct, 5)}">${swlPct}%</td>
         <td class="${highlight(fallPct, 13)}">${fallPct}%</td>
