@@ -280,7 +280,7 @@ function calculateAverages(data) {
   let totalAPW = 0, totalSWL = 0, totalFalls = 0, totalCensus = 0;
   data.forEach(entry => {
     totalAPW += Number(entry.apwResidents || 0);
-    totalSWL += Number(entry.swlResidents || 0);
+    totalSWL += Number(entry.unplannedSwlResidents || 0);
     totalFalls += Number(entry.fallsResidents || 0);
     totalCensus += Number(entry.census || 0);
   });
