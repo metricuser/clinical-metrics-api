@@ -44,7 +44,7 @@ th.centered, td.centered { text-align: center; vertical-align: middle; }
 <input name="apwResidents" placeholder="APW Residents" type="number"/>
 <input name="apwNew" placeholder="APW New this period" type="number"/>
 <input name="swlResidents" placeholder="SWL Residents" type="number"/>
-<input name="unplannedSwlResidents" placeholder="Unplanned SWL Residents" type="number"/>
+<input name="unplannedswlResidents" placeholder="Unplanned SWL Residents" type="number"/>
 <input name="swlNew" placeholder="SWL New this period" type="number"/>
 <input name="swlUnavoidable" placeholder="SWL Unavoidable" type="number"/>
 <input name="fallsResidents" placeholder="Falls Residents" type="number"/>
@@ -218,7 +218,7 @@ async function loadData() {
     .sort((a, b) => a.facilityName.localeCompare(b.facilityName))
     .forEach(entry => {
       const apwPct = entry.census ? ((entry.apwResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
-      const swlPct = entry.census ? ((entry.unplannedSwlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
+      const swlPct = entry.census ? ((entry.unplannedswlResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
       const fallPct = entry.census ? ((entry.fallsResidents || 0) / entry.census * 100).toFixed(1) : "0.0";
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -226,7 +226,7 @@ async function loadData() {
         <td>${entry.segment}</td>
         <td>${entry.month}</td>
         <td>${entry.year}</td>
-        <td class="centered">${entry.census ?? 0}</td><td class="centered">${entry.apwResidents ?? 0}</td><td class="centered">${entry.swlResidents ?? 0}</td><td class="centered">${entry.unplannedSwlResidents ?? 0}</td><td class="centered">${entry.fallsResidents ?? 0}</td>
+        <td class="centered">${entry.census ?? 0}</td><td class="centered">${entry.apwResidents ?? 0}</td><td class="centered">${entry.swlResidents ?? 0}</td><td class="centered">${entry.unplannedswlResidents ?? 0}</td><td class="centered">${entry.fallsResidents ?? 0}</td>
 <td class="centered">${entry.fallsInjury ?? 0}</td>
         <td class="${highlight(apwPct, 3)}">${apwPct}%</td>
         <td class="${highlight(swlPct, 5)}">${swlPct}%</td>
@@ -280,7 +280,7 @@ function calculateAverages(data) {
   let totalAPW = 0, totalSWL = 0, totalFalls = 0, totalCensus = 0;
   data.forEach(entry => {
     totalAPW += Number(entry.apwResidents || 0);
-    totalSWL += Number(entry.unplannedSwlResidents || 0);
+    totalSWL += Number(entry.unplannedswlResidents || 0);
     totalFalls += Number(entry.fallsResidents || 0);
     totalCensus += Number(entry.census || 0);
   });
