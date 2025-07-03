@@ -9,7 +9,7 @@ app.use(express.json());
 
 const entryRoutes = require('./routes/entryRoutes');
 //app.use('/facilities', require('./routes/facilityRoutes'));
-app.use('/entries', require('./routes/entryRoutes'));
+app.use('/entries', entryRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {

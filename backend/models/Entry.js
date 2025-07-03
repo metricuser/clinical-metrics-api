@@ -9,13 +9,13 @@ const entrySchema = new mongoose.Schema({
   census: Number,
   apwResidents: Number,
   swlResidents: Number,
-  swlUnplanned: Number,
-  swlUnavoidable: Number,
+  unplannedSwl: Number,
   apwNew: Number,
   swlNew: Number,
-  falls: Number,
+  swlUnavoidable: Number,
+  fallsResidents: Number,
   fallsWithInjury: Number,
-  notes: String
-}, { timestamps: true });
+  notes: String,
+});
 
 module.exports = mongoose.model('Entry', entrySchema);

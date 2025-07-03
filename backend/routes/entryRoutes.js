@@ -13,12 +13,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new entry
+// POST new entry
 router.post('/', async (req, res) => {
-  const entry = new Entry(req.body);
   try {
-    const newEntry = await entry.save();
-    res.status(201).json(newEntry);
+    const entry = new Entry(req.body);
+    const savedEntry = await entry.save();
+    res.status(201).json(savedEntry);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
