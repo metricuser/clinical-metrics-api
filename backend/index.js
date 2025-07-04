@@ -18,7 +18,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 //Routes
 app.use('/facilities', require('./routes/facilityRoutes'));
-app.use('/entries', require('./routes/entryRoutes);
+app.use('/entries', require('./routes/entryRoutes'));
 
 // Load Models
 const FormData = require('./formData.model');
@@ -35,7 +35,7 @@ app.delete('/entries/:id', async (req, res) => {
 });
 
 // Submit form data
-app.post('/submit', async (req, res) => {
+//app.post('/submit', async (req, res) => {
   try {
     const form = new FormData(req.body);
     await form.save();
