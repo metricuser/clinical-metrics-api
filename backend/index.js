@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const FormModel = require('./formData.model'); // ← This line should be here
 const app = express();
 require('dotenv').config();
 
@@ -35,7 +36,7 @@ app.delete('/entries/:id', async (req, res) => {
 });
 
 // Submit form data
-//app.post('/submit-form', async (req, res) => {
+app.post('/submit-form', async (req, res) => {
   try {
     const form = new FormModel(req.body);
     await form.save();
