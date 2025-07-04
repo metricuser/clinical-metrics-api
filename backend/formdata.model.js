@@ -5,18 +5,11 @@ const formSchema = new mongoose.Schema({
   segment: String,
   month: String,
   year: String,
-  apwResidents: Number,
-  apwNew: Number,
-  swlResidents: Number,
-  swlNew: Number,
-  unplannedSwlResidents: Number,
-  swlUnavoidable: Number,
-  fallsResidents: Number,
-  fallsTotal: Number,
-  fallsInjury: Number,
   census: Number,
-  notes: String,
-  timestamp: { type: Date, default: Date.now }
+  apwResidents: Number,
+  swlResidents: Number,
+  fallsResidents: Number,
+  
 });
 
 module.exports = mongoose.model('FormData', formSchema);
