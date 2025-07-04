@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 const entryRoutes = require('./routes/entryRoutes');
-//app.use('/facilities', require('./routes/facilityRoutes'));
+app.use('/facilities', require('./routes/facilityRoutes'));
 app.use('/entries', entryRoutes);
 
 // Connect to MongoDB
