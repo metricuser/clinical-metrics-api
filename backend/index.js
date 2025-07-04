@@ -36,10 +36,11 @@ app.delete('/entries/:id', async (req, res) => {
 });
 
 // Submit form data
-app.post('/submit-form', async (req, res) => {
+app.post('/entries', async (req, res) => {
   try {
     const form = new FormModel(req.body);
     await form.save();
+    
     res.status(201).json({ message: 'Form data saved.' });
   } catch (error) {
     res.status(500).json({ error: 'Error saving data.' });
