@@ -1,9 +1,9 @@
-// facility.model.js
+
 const mongoose = require('mongoose');
 
-const FacilitySchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  segment: { type: String, required: true }
+const facilitySchema = new mongoose.Schema({
+  name: String,
+  segment: String,
 });
 
-module.exports = mongoose.model('Facility', FacilitySchema);
+module.exports = mongoose.models.Facility || mongoose.model('Facility', facilitySchema);
