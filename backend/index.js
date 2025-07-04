@@ -1,15 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const app = express();
 require('dotenv').config();
 
-const app = express();
+
 app.use(cors());
 app.use(express.json());
-
-const entryRoutes = require('./routes/entryRoutes');
-app.use('/facilities', require('./routes/facilityRoutes'));
-app.use('/entries', entryRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -18,6 +15,10 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => console.error('MongoDB error:', err));
+
+//Routes
+app.use('/facilities', require('./routes/facilityRoutes'));
+app.use('/entries', require('./routes/entryRoutes);
 
 // Load Models
 const FormData = require('./formData.model');
