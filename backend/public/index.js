@@ -13,6 +13,11 @@ let facilityMap = {}; // maps id or name → { name, segment }
 
 let editingId = null;
 
+app.use(cors({
+  origin: '*', // or restrict to your frontend origin for security
+}));
+
+
 document.getElementById("scopeSelect").addEventListener("change", calculateAverages);
 document.getElementById("quarterSelect").addEventListener("change", calculateAverages);
 document.getElementById("yearSelect").addEventListener("change", calculateAverages);
@@ -22,7 +27,7 @@ document.getElementById("facility").addEventListener("change", calculateAverages
 
 
 function fetchFacilities() {
-  fetch('http://clinical-metrics-api.onrender.com/facilities')
+  fetch('https://clinical-metrics-api.onrender.com/facilities')
     .then(response => response.json())
     .then(data => {
    const facilityNames = data.map(f => f.name?.trim().toLowerCase()).filter(Boolean).sort();
@@ -44,7 +49,7 @@ function fetchFacilities() {
 
 
 function fetchEntries() {
-  fetch('http://clinical-metrics-api.onrender.com/entries')
+  fetch('https://clinical-metrics-api.onrender.com/entries')
     .then(response => response.json())
     .then(data => renderEntries(data))
     .catch(error => console.error('Error loading entries:', error));
@@ -58,7 +63,7 @@ const selectedFacility = (document.getElementById("facilityFilter").value || "al
 const selectedMonth = (document.getElementById("monthFilter").value || "all").trim().toLowerCase();
 
 
-  fetch('http://clinical-metrics-api.onrender.com/facilities')
+  fetch('https://clinical-metrics-api.onrender.com/facilities')
     .then(response => response.json())
     .then(facilities => {
      const filtered = entries.filter(entry => {
