@@ -13,7 +13,18 @@ let facilityMap = {}; // maps id or name → { name, segment }
 
 let editingId = null;
 
+
+// ✅ Confirmed Render-safe JS version
 const BASE_URL = 'https://clinical-metrics-api.onrender.com';
+
+console.log("🔥 index.js DEPLOYED AND LIVE 🔥");
+
+// Minimal test fetch to confirm connectivity
+fetch(`${BASE_URL}/entries`)
+  .then(r => r.json())
+  .then(data => console.log("✅ ENTRIES LOADED:", data.length))
+  .catch(err => console.error("❌ FETCH ERROR:", err));
+
 
 
 document.getElementById("scopeSelect").addEventListener("change", calculateAverages);
