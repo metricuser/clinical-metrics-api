@@ -1,16 +1,14 @@
 
 document.addEventListener('DOMContentLoaded', function () {
-
   fetchFacilities();
   fetchEntries();
   populateYearDropdown();
-  
+
   document.getElementById("facilityFilter").addEventListener("change", fetchEntries);
   document.getElementById("monthFilter").addEventListener("change", fetchEntries);
 });
 
-let facilityMap = {}; // maps id or name → { name, segment }
-
+let facilityMap = {};
 let editingId = null;
 
 document.getElementById("scopeSelect").addEventListener("change", calculateAverages);
@@ -19,15 +17,12 @@ document.getElementById("yearSelect").addEventListener("change", calculateAverag
 document.getElementById("segment").addEventListener("change", calculateAverages);
 document.getElementById("facility").addEventListener("change", calculateAverages);
 
-
-
 function fetchFacilities() {
-  fetch('http://localhost:10000/facilities')
+  fetch('/facilities')
     .then(response => response.json())
     .then(data => {
-   const facilityNames = data.map(f => f.name?.trim().toLowerCase()).filter(Boolean).sort();
- 
-   const segments = [...new Set(data.map(f => f.segment))].filter(Boolean).sort();
+      const facilityNames = data.map(f => f.name?.trim().toLowerCase()).filter(Boolean).sort();
+      const segments = [...new Set(data.map(f => f.segment))].filter(Boolean).sort();
 
       facilityMap = {};
       data.forEach(f => {
@@ -42,9 +37,8 @@ function fetchFacilities() {
     .catch(error => console.error('Error fetching facilities:', error));
 }
 
-
 function fetchEntries() {
-  fetch('http://localhost:10000/entries')
+  fetch('/entries')
     .then(response => response.json())
     .then(data => renderEntries(data))
     .catch(error => console.error('Error loading entries:', error));
@@ -54,36 +48,28 @@ function renderEntries(entries) {
   const tableBody = document.getElementById("metricsTable");
   tableBody.innerHTML = "";
 
-const selectedFacility = (document.getElementById("facilityFilter").value || "all").trim().toLowerCase();
-const selectedMonth = (document.getElementById("monthFilter").value || "all").trim().toLowerCase();
+  const selectedFacility = (document.getElementById("facilityFilter").value || "all").trim().toLowerCase();
+  const selectedMonth = (document.getElementById("monthFilter").value || "all").trim().toLowerCase();
 
-
-  fetch('http://localhost:10000/facilities')
+  fetch('/facilities')
     .then(response => response.json())
     .then(facilities => {
-     const filtered = entries.filter(entry => {
-  
- const entryFacility = (
-  facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())
-    ?.name || entry.facility || ""
-).toString().trim().toLowerCase();
+      const filtered = entries.filter(entry => {
+        const entryFacility = (
+          facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())
+            ?.name || entry.facility || ""
+        ).toString().trim().toLowerCase();
 
+        const entryMonth = (entry.month || "").trim().toLowerCase();
+        const facilityMatch = selectedFacility === "all" || entryFacility === selectedFacility;
+        const monthMatch = selectedMonth === "all" || entryMonth === selectedMonth;
 
- const entryMonth = (entry.month || "").trim().toLowerCase();
-
-const facilityMatch = selectedFacility === "all" || entryFacility === selectedFacility;
-const monthMatch = selectedMonth === "all" || entryMonth === selectedMonth;
-
-
-  return facilityMatch && monthMatch;
-});
-
+        return facilityMatch && monthMatch;
+      });
 
       filtered.forEach(entry => {
         const row = document.createElement("tr");
-
-      let facilityName = facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())?.name || entry.facility || "";
-
+        let facilityName = facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())?.name || entry.facility || "";
 
         const swlUnplanned = typeof entry.swlUnplanned === "number" ? entry.swlUnplanned : 0;
 
@@ -118,7 +104,6 @@ const monthMatch = selectedMonth === "all" || entryMonth === selectedMonth;
         tableBody.appendChild(row);
       });
 
-      // ✅ Trigger calculation **after** all rows are added
       calculateAverages();
     });
 }
@@ -135,7 +120,7 @@ function populateDropdown(id, items) {
 
   items.forEach(item => {
     const option = document.createElement("option");
-    option.value = item.trim().toLowerCase();  // normalize value
+    option.value = item.trim().toLowerCase();
     option.textContent = item;
     dropdown.appendChild(option);
   });
@@ -170,9 +155,7 @@ document.getElementById("entryForm").addEventListener("submit", function (event)
     notes: document.getElementById("notes").value || ""
   };
 
-  const url = editingId
-    ? `http://localhost:10000/entries/${editingId}`
-    : "http://localhost:10000/entries";
+  const url = editingId ? `/entries/${editingId}` : "/entries";
   const method = editingId ? "PUT" : "POST";
 
   fetch(url, {
@@ -197,7 +180,7 @@ document.getElementById("entryForm").addEventListener("submit", function (event)
 });
 
 function editEntry(id) {
-  fetch(`http://localhost:10000/entries/${id}`)
+  fetch(`/entries/${id}`)
     .then(response => {
       if (!response.ok) throw new Error("Failed to fetch entry.");
       return response.json();
@@ -231,7 +214,7 @@ function editEntry(id) {
 function deleteEntry(id) {
   if (!confirm("Are you sure you want to delete this entry?")) return;
 
-  fetch(`http://localhost:10000/entries/${id}`, { method: "DELETE" })
+  fetch(`/entries/${id}`, { method: "DELETE" })
     .then(response => {
       if (!response.ok) throw new Error("Failed to delete entry.");
       fetchEntries();
@@ -241,13 +224,13 @@ function deleteEntry(id) {
       alert("There was an error deleting the entry.");
     });
 }
+
 function getQuarter(month) {
-  const months = ["January", "February", "March", "April", "May", "June", 
-                  "July", "August", "September", "October", "November", "December"];
+  const months = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
   const monthIndex = months.indexOf(month);
   return monthIndex < 0 ? null : Math.floor(monthIndex / 3) + 1;
 }
-
 
 function calculateAverages() {
   const rows = document.querySelectorAll("#metricsTable tr");
@@ -268,7 +251,6 @@ function calculateAverages() {
 
     const rowFacility = (cells[0].textContent || "").trim().toLowerCase();
     const rowSegment = (cells[1].textContent || "").trim().toLowerCase();
-
     const month = cells[2].textContent.trim();
     const year = parseInt(cells[3].textContent.trim());
 
@@ -309,11 +291,9 @@ function calculateAverages() {
   document.getElementById("avgAPWQ").textContent = avg(quarterly.apw, quarterly.count);
   document.getElementById("avgSWLQ").textContent = avg(quarterly.swl, quarterly.count);
   document.getElementById("avgFallsQ").textContent = avg(quarterly.falls, quarterly.count);
-
   document.getElementById("avgAPWA").textContent = avg(annual.apw, annual.count);
   document.getElementById("avgSWLA").textContent = avg(annual.swl, annual.count);
   document.getElementById("avgFallsA").textContent = avg(annual.falls, annual.count);
-
   document.getElementById("scopeLabel").textContent =
     selectedScope === "Segment" ? (selectedSegment || "Segment") :
     selectedScope === "Facility" ? (selectedFacility || "Facility") :
