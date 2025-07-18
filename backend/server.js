@@ -1,5 +1,6 @@
 
 const express = require('express');
+const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
@@ -8,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/facilities', require('./routes/facilityRoutes'));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Mongoose schema
 const formSchema = new mongoose.Schema({
@@ -99,5 +100,7 @@ app.delete('/entries/:id', async (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
