@@ -7,6 +7,9 @@ fetch(`${BASE_URL}/entries`)
   .then(res => res.json())
   .then(data => {
     console.log("✅ Entries loaded from Render API:", data.length);
-    document.body.insertAdjacentHTML("beforeend", `<p>Entries loaded: ${data.length}</p>`);
+    document.body.insertAdjacentHTML("beforeend", `<p>✅ Entries loaded: ${data.length}</p>`);
   })
-  .catch(err => console.error("❌ Fetch failed", err));
+  .catch(err => {
+    console.error("❌ Fetch failed:", err);
+    document.body.insertAdjacentHTML("beforeend", `<p style="color:red">❌ Failed to load entries from API.</p>`);
+  });
