@@ -1,3 +1,10 @@
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {
   fetchFacilities();
@@ -95,7 +102,7 @@ function renderEntries(entries) {
           <td style="color:${apwColor}">${apwPercent}%</td>
           <td style="color:${swlColor}">${swlPercent}%</td>
           <td style="color:${fallsColor}">${fallsPercent}%</td>
-          <td>${entry.notes || ''}</td>
+          <td>${escapeHTML(entry.notes || '')}</td>
           <td>
             <button onclick="editEntry('${entry._id}')">Edit</button>
             <button onclick="deleteEntry('${entry._id}')">Delete</button>
