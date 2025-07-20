@@ -1,7 +1,6 @@
 
-function escapeHTML(str) {
-  if (typeof str !== 'string') return str;
-  return str
+function escapeHtml(text) {
+  return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
