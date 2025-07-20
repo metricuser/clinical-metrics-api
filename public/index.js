@@ -79,44 +79,66 @@ function renderEntries(entries) {
         return facilityMatch && monthMatch;
       });
 
-      filtered.forEach(entry => {
-        const row = document.createElement("tr");
-        let facilityName = facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())?.name || entry.facility || "";
 
-        const swlUnplanned = typeof entry.swlUnplanned === "number" ? entry.swlUnplanned : 0;
+      
+ filtered.forEach(entry => {
+  const row = document.createElement("tr");
 
-        const apwPercent = entry.census ? ((entry.apwResidents / entry.census) * 100).toFixed(2) : '0.00';
-        const swlPercent = entry.census ? ((swlUnplanned / entry.census) * 100).toFixed(2) : '0.00';
-        const fallsPercent = entry.census ? ((entry.fallsResidents / entry.census) * 100).toFixed(2) : '0.00';
+  const facilityName = facilities.find(f =>
+    f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase()
+  )?.name || entry.facility || "";
 
-        const apwColor = apwPercent >= 3 ? 'red' : 'black';
-        const swlColor = swlPercent >= 5 ? 'red' : 'black';
-        const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
+  const swlUnplanned = typeof entry.swlUnplanned === "number" ? entry.swlUnplanned : 0;
 
-       row.innerHTML = `
-  <td>${escapeHTML(facilityName)}</td>
-  <td>${escapeHTML(entry.segment?.trim() || "")}</td>
-  <td>${escapeHTML(entry.month)}</td>
-  <td>${escapeHTML(entry.year)}</td>
-  <td class="centered">${entry.census}</td>
-  <td class="centered">${entry.apwResidents}</td>
-  <td class="centered">${entry.swlResidents}</td>
-  <td class="centered">${swlUnplanned}</td>
-  <td class="centered">${entry.fallsResidents}</td>
-  <td class="centered">${entry.fallsInjury}</td>
-  <td style="color:${apwColor}">${apwPercent}%</td>
-  <td style="color:${swlColor}">${swlPercent}%</td>
-  <td style="color:${fallsColor}">${fallsPercent}%</td>
-  <td>${escapeHTML(entry.notes || '')}</td>
-  <td>
-    <button onclick="editEntry('${entry._id}')">Edit</button>
-    <button onclick="deleteEntry('${entry._id}')">Delete</button>
-  </td>
-`;
+  const apwPercent = entry.census ? ((entry.apwResidents / entry.census) * 100).toFixed(2) : '0.00';
+  const swlPercent = entry.census ? ((swlUnplanned / entry.census) * 100).toFixed(2) : '0.00';
+  const fallsPercent = entry.census ? ((entry.fallsResidents / entry.census) * 100).toFixed(2) : '0.00';
 
- 
-        tableBody.appendChild(row);
-      });
+  const apwColor = apwPercent >= 3 ? 'red' : 'black';
+  const swlColor = swlPercent >= 5 ? 'red' : 'black';
+  const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
+
+  function td(text, isCentered = false, color = null) {
+    const cell = document.createElement("td");
+    cell.textContent = text;
+    if (isCentered) cell.classList.add("centered");
+    if (color) cell.style.color = color;
+    return cell;
+  }
+
+  row.appendChild(td(facilityName));
+  row.appendChild(td(entry.segment?.trim() || ""));
+  row.appendChild(td(entry.month));
+  row.appendChild(td(entry.year));
+  row.appendChild(td(entry.census, true));
+  row.appendChild(td(entry.apwResidents, true));
+  row.appendChild(td(entry.swlResidents, true));
+  row.appendChild(td(swlUnplanned, true));
+  row.appendChild(td(entry.fallsResidents, true));
+  row.appendChild(td(entry.fallsInjury, true));
+  row.appendChild(td(`${apwPercent}%`, false, apwColor));
+  row.appendChild(td(`${swlPercent}%`, false, swlColor));
+  row.appendChild(td(`${fallsPercent}%`, false, fallsColor));
+  row.appendChild(td(entry.notes || ""));
+
+  const actionTd = document.createElement("td");
+  const editBtn = document.createElement("button");
+  editBtn.textContent = "Edit";
+  editBtn.onclick = () => editEntry(entry._id);
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.onclick = () => deleteEntry(entry._id);
+
+  actionTd.appendChild(editBtn);
+  actionTd.appendChild(deleteBtn);
+  row.appendChild(actionTd);
+
+  tableBody.appendChild(row);
+});
+
+
+
 
       calculateAverages();
     });
