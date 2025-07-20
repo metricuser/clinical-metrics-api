@@ -1,6 +1,6 @@
 
 function escapeHTML(str) {
-  if (typeof str !== 'string') return str;
+  if (typeof str !== 'string') return '';
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -8,7 +8,6 @@ function escapeHTML(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -93,28 +92,26 @@ function renderEntries(entries) {
         const swlColor = swlPercent >= 5 ? 'red' : 'black';
         const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
 
-       row.innerHTML = `
-  <td>${escapeHTML(facilityName)}</td>
-  <td>${escapeHTML(entry.segment?.trim() || "")}</td>
-  <td>${escapeHTML(entry.month)}</td>
-  <td>${escapeHTML(entry.year)}</td>
-  <td class="centered">${entry.census}</td>
-  <td class="centered">${entry.apwResidents}</td>
-  <td class="centered">${entry.swlResidents}</td>
-  <td class="centered">${swlUnplanned}</td>
-  <td class="centered">${entry.fallsResidents}</td>
-  <td class="centered">${entry.fallsInjury}</td>
-  <td style="color:${apwColor}">${apwPercent}%</td>
-  <td style="color:${swlColor}">${swlPercent}%</td>
-  <td style="color:${fallsColor}">${fallsPercent}%</td>
-  <td>${escapeHTML(entry.notes || '')}</td>
-  <td>
-    <button onclick="editEntry('${entry._id}')">Edit</button>
-    <button onclick="deleteEntry('${entry._id}')">Delete</button>
-  </td>
-`;
-
- 
+        row.innerHTML = `
+          <td>${facilityName}</td>
+          <td>${entry.segment?.trim() || ""}</td>
+          <td>${entry.month}</td>
+          <td>${entry.year}</td>
+          <td class="centered">${entry.census}</td>
+          <td class="centered">${entry.apwResidents}</td>
+          <td class="centered">${entry.swlResidents}</td>
+          <td class="centered">${swlUnplanned}</td>
+          <td class="centered">${entry.fallsResidents}</td>
+          <td class="centered">${entry.fallsInjury}</td>
+          <td style="color:${apwColor}">${apwPercent}%</td>
+          <td style="color:${swlColor}">${swlPercent}%</td>
+          <td style="color:${fallsColor}">${fallsPercent}%</td>
+          <td>${escapeHTML(entry.notes || '')}</td>
+          <td>
+            <button onclick="editEntry('${entry._id}')">Edit</button>
+            <button onclick="deleteEntry('${entry._id}')">Delete</button>
+          </td>
+        `;
         tableBody.appendChild(row);
       });
 
