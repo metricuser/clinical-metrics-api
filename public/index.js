@@ -106,7 +106,7 @@ function renderEntries(entries) {
           <td style="color:${apwColor}">${apwPercent}%</td>
           <td style="color:${swlColor}">${swlPercent}%</td>
           <td style="color:${fallsColor}">${fallsPercent}%</td>
-          <td>${escapeHTML(entry.notes || '')}</td>
+          <td>${(entry.notes || '').replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
           <td>
             <button onclick="editEntry('${entry._id}')">Edit</button>
             <button onclick="deleteEntry('${entry._id}')">Delete</button>
