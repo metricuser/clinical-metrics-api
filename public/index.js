@@ -98,12 +98,13 @@ function renderEntries(entries) {
   const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
 
   function td(text, isCentered = false, color = null) {
-    const cell = document.createElement("td");
-    cell.textContent = text;
-    if (isCentered) cell.classList.add("centered");
-    if (color) cell.style.color = color;
-    return cell;
-  }
+  const cell = document.createElement("td");
+  cell.textContent = text || ''; // ✅ SAFE: treats everything as plain text
+  if (isCentered) cell.classList.add("centered");
+  if (color) cell.style.color = color;
+  return cell;
+}
+
 
   row.appendChild(td(facilityName));
   row.appendChild(td(entry.segment?.trim() || ""));
