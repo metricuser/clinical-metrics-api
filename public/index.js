@@ -1,12 +1,23 @@
 
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function escapeHTML(str) {
+  return str.replace(/[&<>"']/g, function (match) {
+    const escapeMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return escapeMap[match];
+  });
 }
+
+function td(text) {
+  const cell = document.createElement("td");
+  cell.innerHTML = escapeHTML(text == null ? "" : text.toString());
+  return cell;
+}
+
 
 
 
