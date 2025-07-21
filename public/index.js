@@ -139,6 +139,19 @@ function renderEntries(entries) {
 
 
 
+const scripts = tableBody.querySelectorAll("script");
+console.log("Injected <script> tags found in table:", scripts.length);
+scripts.forEach(s => console.log(s.outerHTML));
+
+
+
+
+
+
+
+
+
+
 
       calculateAverages();
     });
