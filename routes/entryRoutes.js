@@ -37,4 +37,46 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+
+// Update existing entry
+router.put('/:id', async (req, res) => {
+  try {
+    const updatedEntry = await Entry.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedEntry) {
+      return res.status(404).json({ message: 'Entry not found' });
+    }
+    res.json(updatedEntry);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+
+
+// Delete entry
+router.delete('/:id', async (req, res) => {
+  try {
+    const deletedEntry = await Entry.findByIdAndDelete(req.params.id);
+    if (!deletedEntry) {
+      return res.status(404).json({ message: 'Entry not found' });
+    }
+    res.json({ message: 'Entry deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
+
+
+
+
+
+
 module.exports = router;
