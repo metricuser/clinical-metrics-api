@@ -1,24 +1,13 @@
 
 function escapeHTML(str) {
-  return str.replace(/[&<>"']/g, function (match) {
-    const escapeMap = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    };
-    return escapeMap[match];
-  });
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
-
-function td(text) {
-  const cell = document.createElement("td");
-  cell.innerHTML = escapeHTML(text == null ? "" : text.toString());
-  return cell;
-}
-
-
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -89,81 +78,42 @@ function renderEntries(entries) {
         return facilityMatch && monthMatch;
       });
 
+      filtered.forEach(entry => {
+        const row = document.createElement("tr");
+        let facilityName = facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())?.name || entry.facility || "";
 
-      
- filtered.forEach(entry => {
-  const row = document.createElement("tr");
+        const swlUnplanned = typeof entry.swlUnplanned === "number" ? entry.swlUnplanned : 0;
 
-  const facilityName = facilities.find(f =>
-    f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase()
-  )?.name || entry.facility || "";
+        const apwPercent = entry.census ? ((entry.apwResidents / entry.census) * 100).toFixed(2) : '0.00';
+        const swlPercent = entry.census ? ((swlUnplanned / entry.census) * 100).toFixed(2) : '0.00';
+        const fallsPercent = entry.census ? ((entry.fallsResidents / entry.census) * 100).toFixed(2) : '0.00';
 
-  const swlUnplanned = typeof entry.swlUnplanned === "number" ? entry.swlUnplanned : 0;
+        const apwColor = apwPercent >= 3 ? 'red' : 'black';
+        const swlColor = swlPercent >= 5 ? 'red' : 'black';
+        const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
 
-  const apwPercent = entry.census ? ((entry.apwResidents / entry.census) * 100).toFixed(2) : '0.00';
-  const swlPercent = entry.census ? ((swlUnplanned / entry.census) * 100).toFixed(2) : '0.00';
-  const fallsPercent = entry.census ? ((entry.fallsResidents / entry.census) * 100).toFixed(2) : '0.00';
-
-  const apwColor = apwPercent >= 3 ? 'red' : 'black';
-  const swlColor = swlPercent >= 5 ? 'red' : 'black';
-  const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
-
-  function td(text, isCentered = false, color = null) {
-  const cell = document.createElement("td");
-  cell.textContent = text || ''; // ✅ SAFE: treats everything as plain text
-  if (isCentered) cell.classList.add("centered");
-  if (color) cell.style.color = color;
-  return cell;
-}
-
-
-  row.appendChild(td(facilityName));
-  row.appendChild(td(entry.segment?.trim() || ""));
-  row.appendChild(td(entry.month));
-  row.appendChild(td(entry.year));
-  row.appendChild(td(entry.census, true));
-  row.appendChild(td(entry.apwResidents, true));
-  row.appendChild(td(entry.swlResidents, true));
-  row.appendChild(td(swlUnplanned, true));
-  row.appendChild(td(entry.fallsResidents, true));
-  row.appendChild(td(entry.fallsInjury, true));
-  row.appendChild(td(`${apwPercent}%`, false, apwColor));
-  row.appendChild(td(`${swlPercent}%`, false, swlColor));
-  row.appendChild(td(`${fallsPercent}%`, false, fallsColor));
-  console.log("Notes for entry", entry._id, ":", entry.notes);
-  row.appendChild(td(escapeHtml(entry.notes || "")));
-
-  const actionTd = document.createElement("td");
-  const editBtn = document.createElement("button");
-  editBtn.textContent = "Edit";
-  editBtn.onclick = () => editEntry(entry._id);
-
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Delete";
-  deleteBtn.onclick = () => deleteEntry(entry._id);
-
-  actionTd.appendChild(editBtn);
-  actionTd.appendChild(deleteBtn);
-  row.appendChild(actionTd);
-
-  tableBody.appendChild(row);
-});
-
-
-
-const scripts = tableBody.querySelectorAll("script");
-console.log("Injected <script> tags found in table:", scripts.length);
-scripts.forEach(s => console.log(s.outerHTML));
-
-
-
-
-
-
-
-
-
-
+        row.innerHTML = `
+          <td>${facilityName}</td>
+          <td>${entry.segment?.trim() || ""}</td>
+          <td>${entry.month}</td>
+          <td>${entry.year}</td>
+          <td class="centered">${entry.census}</td>
+          <td class="centered">${entry.apwResidents}</td>
+          <td class="centered">${entry.swlResidents}</td>
+          <td class="centered">${swlUnplanned}</td>
+          <td class="centered">${entry.fallsResidents}</td>
+          <td class="centered">${entry.fallsInjury}</td>
+          <td style="color:${apwColor}">${apwPercent}%</td>
+          <td style="color:${swlColor}">${swlPercent}%</td>
+          <td style="color:${fallsColor}">${fallsPercent}%</td>
+          <td>${escapeHTML(entry.notes || '')}</td>
+          <td>
+            <button onclick="editEntry('${entry._id}')">Edit</button>
+            <button onclick="deleteEntry('${entry._id}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
 
       calculateAverages();
     });
