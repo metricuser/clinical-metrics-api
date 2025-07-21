@@ -118,6 +118,7 @@ function renderEntries(entries) {
   row.appendChild(td(`${apwPercent}%`, false, apwColor));
   row.appendChild(td(`${swlPercent}%`, false, swlColor));
   row.appendChild(td(`${fallsPercent}%`, false, fallsColor));
+  console.log("Notes for entry", entry._id, ":", entry.notes);
   row.appendChild(td(escapeHtml(entry.notes || "")));
 
   const actionTd = document.createElement("td");
