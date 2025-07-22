@@ -98,19 +98,25 @@ function renderEntries(entries) {
     entry.notes
   ];
 
-  fields.forEach((value, i) => {
-    const td = document.createElement('td');
+ fields.forEach((value, i) => {
+  const td = document.createElement('td');
 
-    // Add color for percent columns
-    if (i >= 10 && i <= 12) {
-      td.style.color = parseFloat(value) >= (
-        i === 10 ? 3 : i === 11 ? 5 : 13
-      ) ? 'red' : 'black';
-    }
-
+  // Convert to number if needed for coloring
+  if (i >= 10 && i <= 12) {
+    const num = parseFloat(value);
     td.textContent = value;
-    row.appendChild(td);
-  });
+
+    if (!isNaN(num)) {
+      td.style.color = num >= (i === 10 ? 3 : i === 11 ? 5 : 13) ? 'red' : 'black';
+    }
+  } else {
+    // Use textContent for safety (prevents script injection)
+    td.textContent = value;
+  }
+
+  row.appendChild(td);
+});
+
 
   // Actions column
   const actionsTd = document.createElement('td');
