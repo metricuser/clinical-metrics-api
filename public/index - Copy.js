@@ -1,196 +1,13 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Clinical Metrics Dashboard</title>
-  <style>
-    body { font-family: Arial; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    h2 { margin-top: 40px; }
-  </style>
-</head>
-<body>
-  <h1>Clinical Metrics Dashboard</h1>
-
-  <form id="entryForm">
-    <label>Facility</label><br />
-    <select id="facility" required></select><br /><br />
-    <label>Segment</label><br />
-    <select id="segment" required></select><br /><br />
-   <label>Month</label><br />
-  <select id="month" required>
-  <option value="">Select Month</option>
-  <option value="January">January</option>
-  <option value="February">February</option>
-  <option value="March">March</option>
-  <option value="April">April</option>
-  <option value="May">May</option>
-  <option value="June">June</option>
-  <option value="July">July</option>
-  <option value="August">August</option>
-  <option value="September">September</option>
-  <option value="October">October</option>
-  <option value="November">November</option>
-  <option value="December">December</option>
-  </select><br /><br />
-  <label>Year</label><br />
-  <select id="year" required>
-  <option value="">Select Year</option>
-  
-</select><br /><br />
-    <label>APW Residents</label><br />
-    <input id="apwResidents" /><br /><br />
-    <label>APW New This Period</label><br />
-    <input id="apwNew" /><br /><br />
-    <label>SWL Residents</label><br />
-    <input id="swlResidents" /><br /><br />
-    <label>Unplanned SWL Residents</label><br />
-    <input id="swlUnplanned" /><br /><br />
-    <label>SWL New This Period</label><br />
-    <input id="swlNew" /><br /><br />
-    <label>SWL Unavoidable</label><br />
-    <input id="swlUnavoidable" /><br /><br />
-    <label>Falls Residents</label><br />
-    <input id="fallsResidents" /><br /><br />
-    <label>Total Falls</label><br />
-    <input id="fallsTotal" /><br /><br />
-    <label>Falls with Injury</label><br />
-    <input id="fallsInjury" /><br /><br />
-    <label>Census</label><br />
-    <input id="census" /><br /><br />
-    <label>Notes</label><br />
-    <input id="notes" /><br /><br />
-    <button type="submit" id="submitEntry">Submit Entry</button>
-  </form>
-
- 
-
-
-
-
-<style>
-  td.centered {
-    text-align: center;
-    
-  }
-</style>
-
-
-
-<h2>Quarterly & Annual Averages</h2>
-
-<div style="margin-bottom: 1em;">
-  <label for="scopeSelect">Scope:</label>
-  <select id="scopeSelect">
-    <option value="Corporate">Corporate</option>
-    <option value="Segment">Segment</option>
-    <option value="Facility">Facility</option>
-  </select>
-
-  <label for="quarterSelect" style="margin-left: 1em;">Quarter:</label>
-  <select id="quarterSelect">
-    <option value="Q1">Q1</option>
-    <option value="Q2">Q2</option>
-    <option value="Q3">Q3</option>
-    <option value="Q4">Q4</option>
-  </select>
-
-  <label for="yearSelect" style="margin-left: 1em;">Year:</label>
-  <select id="yearSelect"></select>
-</div>
-
-<table id="averagesTable">
-  <thead>
-    <tr>
-      <th>Scope Name</th>
-      <th>APW% [Quarter / Annual]</th>
-      <th>SWL% [Quarter / Annual]</th>
-      <th>Falls% [Quarter / Annual]</th>
-    </tr>
-  </thead>
-  <tbody id="averagesTableBody">
-    <tr>
-      <td id="scopeLabel">Corporate</td>
-      <td><span id="avgAPWQ">0%</span> / <span id="avgAPWA">0%</span></td>
-      <td><span id="avgSWLQ">0%</span> / <span id="avgSWLA">0%</span></td>
-      <td><span id="avgFallsQ">0%</span> / <span id="avgFallsA">0%</span></td>
-    </tr>
-  </tbody>
-</table>
-
-  
-
-
- <br /><br /><br />
-
-<div style="margin-bottom: 1em;">
-  <label for="facilityFilter">Filter by Facility:</label>
-  <select id="facilityFilter">
-    <option value="">All</option>
-  </select>
-
-  <label for="monthFilter" style="margin-left: 1em;">Filter by Month:</label>
-  <select id="monthFilter">
-    <option value="">All Months</option>
-    <option value="January">January</option>
-    <option value="February">February</option>
-    <option value="March">March</option>
-    <option value="April">April</option>
-    <option value="May">May</option>
-    <option value="June">June</option>
-    <option value="July">July</option>
-    <option value="August">August</option>
-    <option value="September">September</option>
-    <option value="October">October</option>
-    <option value="November">November</option>
-    <option value="December">December</option>
-  </select>
-</div>
-
-
-
-<h2>Submitted Entries</h2>
-  <table id="entriesTable">
-    <thead>
-      <tr>
-       <th>Facility</th>
-        <th>Segment</th>
-        <th>Month</th>
-        <th>Year</th>
-        <th>Census</th>
-        <th>APW</th>
-        <th>SWL</th>
-        <th>Unplanned SWL</th>
-        <th>Falls</th>
-        <th>Falls with Injury</th>
-        <th>APW%</th>
-        <th>SWL%</th>
-        <th>Falls%</th>
-        <th>Notes</th>
-        <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="metricsTable"></tbody>
-  </table>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const yearSelect = document.getElementById("yearSelect");
-    for (let y = 2025; y <= 2030; y++) {
-      const opt = document.createElement("option");
-      opt.value = y;
-      opt.textContent = y;
-      yearSelect.appendChild(opt);
-    }
-  });
-</script>
-
-
-
-
+function escapeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -289,7 +106,7 @@ function renderEntries(entries) {
           <td style="color:${apwColor}">${apwPercent}%</td>
           <td style="color:${swlColor}">${swlPercent}%</td>
           <td style="color:${fallsColor}">${fallsPercent}%</td>
-          <td>${entry.notes || ''}</td>
+          <td>${escapeHTML(entry.notes || '')}</td>
           <td>
             <button onclick="editEntry('${entry._id}')">Edit</button>
             <button onclick="deleteEntry('${entry._id}')">Delete</button>
@@ -493,26 +310,3 @@ function calculateAverages() {
     selectedScope === "Facility" ? (selectedFacility || "Facility") :
     "Corporate";
 }
-
-
-
-
- 
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const yearSelect = document.getElementById("year");
-    for (let y = 2025; y <= 2030; y++) {
-      const opt = document.createElement("option");
-      opt.value = y;
-      opt.textContent = y;
-      yearSelect.appendChild(opt);
-    }
-  });
-</script>
-
-<script src="index.js" defer></script>
-
-
-</body>
-</html>

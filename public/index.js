@@ -78,42 +78,56 @@ function renderEntries(entries) {
         return facilityMatch && monthMatch;
       });
 
-      filtered.forEach(entry => {
-        const row = document.createElement("tr");
-        let facilityName = facilities.find(f => f._id === entry.facility || f.name?.toLowerCase() === entry.facility?.toLowerCase())?.name || entry.facility || "";
+     entries.forEach(entry => {
+  const row = document.createElement('tr');
 
-        const swlUnplanned = typeof entry.swlUnplanned === "number" ? entry.swlUnplanned : 0;
+  const fields = [
+    entry.facility,
+    entry.segment,
+    entry.month,
+    entry.year,
+    entry.census,
+    entry.apw,
+    entry.swl,
+    entry.unplannedSwl,
+    entry.falls,
+    entry.fallsInjury,
+    `${entry.apwPercent.toFixed(2)}%`,
+    `${entry.swlPercent.toFixed(2)}%`,
+    `${entry.fallsPercent.toFixed(2)}%`,
+    entry.notes
+  ];
 
-        const apwPercent = entry.census ? ((entry.apwResidents / entry.census) * 100).toFixed(2) : '0.00';
-        const swlPercent = entry.census ? ((swlUnplanned / entry.census) * 100).toFixed(2) : '0.00';
-        const fallsPercent = entry.census ? ((entry.fallsResidents / entry.census) * 100).toFixed(2) : '0.00';
+  fields.forEach((value, i) => {
+    const td = document.createElement('td');
 
-        const apwColor = apwPercent >= 3 ? 'red' : 'black';
-        const swlColor = swlPercent >= 5 ? 'red' : 'black';
-        const fallsColor = fallsPercent >= 13 ? 'red' : 'black';
+    // Add color for percent columns
+    if (i >= 10 && i <= 12) {
+      td.style.color = parseFloat(value) >= (
+        i === 10 ? 3 : i === 11 ? 5 : 13
+      ) ? 'red' : 'black';
+    }
 
-        row.innerHTML = `
-          <td>${facilityName}</td>
-          <td>${entry.segment?.trim() || ""}</td>
-          <td>${entry.month}</td>
-          <td>${entry.year}</td>
-          <td class="centered">${entry.census}</td>
-          <td class="centered">${entry.apwResidents}</td>
-          <td class="centered">${entry.swlResidents}</td>
-          <td class="centered">${swlUnplanned}</td>
-          <td class="centered">${entry.fallsResidents}</td>
-          <td class="centered">${entry.fallsInjury}</td>
-          <td style="color:${apwColor}">${apwPercent}%</td>
-          <td style="color:${swlColor}">${swlPercent}%</td>
-          <td style="color:${fallsColor}">${fallsPercent}%</td>
-          <td>${escapeHTML(entry.notes || '')}</td>
-          <td>
-            <button onclick="editEntry('${entry._id}')">Edit</button>
-            <button onclick="deleteEntry('${entry._id}')">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
+    td.textContent = value;
+    row.appendChild(td);
+  });
+
+  // Actions column
+  const actionsTd = document.createElement('td');
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Edit';
+  editBtn.onclick = () => editEntry(entry._id);
+  actionsTd.appendChild(editBtn);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.onclick = () => deleteEntry(entry._id);
+  actionsTd.appendChild(deleteBtn);
+
+  row.appendChild(actionsTd);
+  tableBody.appendChild(row);
+});
+
 
       calculateAverages();
     });
