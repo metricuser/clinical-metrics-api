@@ -78,66 +78,63 @@ function renderEntries(entries) {
         return facilityMatch && monthMatch;
       });
 
-     entries.forEach(entry => {
-  const row = document.createElement('tr');
+      filtered.forEach(entry => {
+        const row = document.createElement('tr');
 
-  const fields = [
-    entry.facility,
-    entry.segment,
-    entry.month,
-    entry.year,
-    entry.census,
-    entry.apw,
-    entry.swl,
-    entry.unplannedSwl,
-    entry.falls,
-    entry.fallsInjury,
-    `${entry.apwPercent.toFixed(2)}%`,
-    `${entry.swlPercent.toFixed(2)}%`,
-    `${entry.fallsPercent.toFixed(2)}%`,
-    entry.notes
-  ];
+        const fields = [
+          entry.facility,
+          entry.segment,
+          entry.month,
+          entry.year,
+          entry.census,
+          entry.apw,
+          entry.swl,
+          entry.unplannedSwl,
+          entry.falls,
+          entry.fallsInjury,
+          `${entry.apwPercent.toFixed(2)}%`,
+          `${entry.swlPercent.toFixed(2)}%`,
+          `${entry.fallsPercent.toFixed(2)}%`,
+          entry.notes
+        ];
 
- fields.forEach((value, i) => {
-  const td = document.createElement('td');
+        fields.forEach((value, i) => {
+          const td = document.createElement('td');
 
-  // Convert to number if needed for coloring
-  if (i >= 10 && i <= 12) {
-    const num = parseFloat(value);
-    td.textContent = value;
+          // Percent coloring logic
+          if (i === 10) {
+            td.style.color = parseFloat(value) >= 3 ? 'red' : 'black';
+          } else if (i === 11) {
+            td.style.color = parseFloat(value) >= 5 ? 'red' : 'black';
+          } else if (i === 12) {
+            td.style.color = parseFloat(value) >= 13 ? 'red' : 'black';
+          }
 
-    if (!isNaN(num)) {
-      td.style.color = num >= (i === 10 ? 3 : i === 11 ? 5 : 13) ? 'red' : 'black';
-    }
-  } else {
-    // Use textContent for safety (prevents script injection)
-    td.textContent = value;
-  }
+          // Always use textContent to prevent XSS
+          td.textContent = typeof value === 'string' ? value : value?.toString();
+          row.appendChild(td);
+        });
 
-  row.appendChild(td);
-});
+        // Actions column
+        const actionsTd = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => editEntry(entry._id);
+        actionsTd.appendChild(editBtn);
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = () => deleteEntry(entry._id);
+        actionsTd.appendChild(deleteBtn);
 
-  // Actions column
-  const actionsTd = document.createElement('td');
-  const editBtn = document.createElement('button');
-  editBtn.textContent = 'Edit';
-  editBtn.onclick = () => editEntry(entry._id);
-  actionsTd.appendChild(editBtn);
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = 'Delete';
-  deleteBtn.onclick = () => deleteEntry(entry._id);
-  actionsTd.appendChild(deleteBtn);
-
-  row.appendChild(actionsTd);
-  tableBody.appendChild(row);
-});
-
+        row.appendChild(actionsTd);
+        tableBody.appendChild(row);
+      });
 
       calculateAverages();
     });
 }
+
 
 function populateDropdown(id, items) {
   const dropdown = document.getElementById(id);
